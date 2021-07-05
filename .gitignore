@@ -8,5 +8,7 @@
 /tmp/
 
 # rspec failure tracking
+.rspec
 .rspec_status
 .history
+.vscode

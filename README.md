@@ -41,3 +41,8 @@ The gem is available as open source under the terms of the [MIT License](https:/
 ## Code of Conduct
 
 Everyone interacting in the TwelvedataRuby project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/twelvedata_ruby/blob/master/CODE_OF_CONDUCT.md).
+
+
+# Notice
+
+This is not an offical Twelve Data ruby library and the author of this gem is not affiliated with Twelve Data in any way, shape or form. Twelve Data APIs and data are Copyright © 2020 Twelve Data Pte. Ltd
