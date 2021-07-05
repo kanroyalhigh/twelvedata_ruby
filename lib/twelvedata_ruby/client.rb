@@ -30,17 +30,14 @@ module TwelvedataRuby
       self.connect_timeout = options[:connect_timeout] || CONNECT_TIMEOUT
     end
 
+    # can be client.api_usage.fetch or client.api_usage; client.fetch
     def method_missing(endpoint_name, **params, &_block)
       self.endpoint ||= Endpoint.new(endpoint_name, params.merge(api_key: api_key))
-      if endpoint.valid?
-        self.request ||= Request.new(endpoint: endpoint, connect_timeout: connect_timeout)
-        return request
-      end
-      super(endpoint_name, params)
+      instantiates_request || super(endpoint_name, params)
     end
 
-    def fetch
-      return nil unless request&.valid?
+    def fetch(rqst_object=nil)
+      return nil unless instantiates_request(rqst_object)&.valid?
 
       self.response = self.class.request(request)
     end
@@ -52,5 +49,16 @@ module TwelvedataRuby
     private
 
     attr_writer :api_key, :endpoint, :request, :response
+    def instantiates_request(rqst_object=nil)
+      if rqst_object
+        self.request = rqst_object
+        self.endpoint = reques.endpoint
+      end
+      return nil unless endpoint&.valid?
+
+      self.request ||= Request.new(endpoint: endpoint, connect_timeout: connect_timeout)
+      request.client ||= self
+      request
+    end
   end
 end

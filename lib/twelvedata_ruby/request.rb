@@ -23,6 +23,7 @@ module TwelvedataRuby
     end
 
     attr_reader :endpoint, :connect_timeout
+    attr_accessor :client
 
     def initialize(endpoint: nil, endpoint_name: nil, params: nil, connect_timeout: nil)
       self.endpoint = endpoint || Endpoint.new(endpoint_name, params)
@@ -31,7 +32,7 @@ module TwelvedataRuby
     def_delegator :endpoint, :path_name
 
     def fetch
-      return_nil_unless_valid { Client.new(request: self)&.fetch }
+      return_nil_unless_valid { (client || Client.new(request: self))&.fetch }
     end
 
     def filename
