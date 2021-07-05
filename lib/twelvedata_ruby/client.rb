@@ -14,25 +14,28 @@ module TwelvedataRuby
 
       def build_requests(requests)
         requests = [requests] unless requests.is_a?(Array)
-        requests.map {|r| r.to_a }
+        requests.map(&:to_a)
       end
     end
 
     attr_accessor :connect_timeout
     attr_reader :api_key, :endpoint, :request, :response
 
-    def initialize(endpoint: nil, endpoint_name: nil, params: nil, request: nil, api_key: nil, connect_timeout: nil)
-      self.request = request
-      self.endpoint = request ? request.endpoint : (endpoint || (endpoint_name ? Endpoint(endpoint_name, params) : nil))
-      self.api_key = api_key || ENV.fetch(API_KEY_ENV_NAME)
-      self.connect_timeout = connect_timeout || CONNECT_TIMEOUT
+    def initialize(options={})
+      self.request = options[:request]
+      self.endpoint = request&.endpoint ||
+                      options[:endpoint] ||
+                      (options[:endpoint_name] ? Endpoint(options[:endpoint_name], options[:params]) : nil)
+      self.api_key = options[:api_key] || ENV.fetch(API_KEY_ENV_NAME)
+      self.connect_timeout = options[:connect_timeout] || CONNECT_TIMEOUT
     end
 
     def method_missing(endpoint_name, **params, &_block)
       self.endpoint ||= Endpoint.new(endpoint_name, params.merge(api_key: api_key))
-      self.request ||= Request
-        .new(endpoint: endpoint, connect_timeout: connect_timeout) and return request if endpoint.valid?
-
+      if endpoint.valid?
+        self.request ||= Request.new(endpoint: endpoint, connect_timeout: connect_timeout)
+        return request
+      end
       super(endpoint_name, params)
     end
 
