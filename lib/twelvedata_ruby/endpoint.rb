@@ -5,7 +5,7 @@ module TwelvedataRuby
     APIKEY_KEY = :apikey
     DEFINITIONS = {
       api_usage: {
-        parameters: { keys: %i[format] }
+        parameters: {keys: %i[format]}
       },
       stocks: {
         parameters: {
@@ -13,35 +13,35 @@ module TwelvedataRuby
         }
       },
       forex_pairs: {
-        parameters: { keys: %i[symbol currency_base currency_quote format] }
+        parameters: {keys: %i[symbol currency_base currency_quote format]}
       },
       cryptocurrencies: {
-        parameters: { keys: %i[symbol exchange currency_base currency_quote format] },
+        parameters: {keys: %i[symbol exchange currency_base currency_quote format]},
         response: {}
       },
       etf: {
-        parameters: { keys: %i[symbol format] }
+        parameters: {keys: %i[symbol format]}
       },
       indices: {
-        parameters: { keys: %i[symbol country format] }
+        parameters: {keys: %i[symbol country format]}
       },
       exchanges: {
-        parameters: { keys: %i[type name code country format] }
+        parameters: {keys: %i[type name code country format]}
       },
       cryptocurrency_exchanges: {
-        parameters: { keys: %i[name format] }
+        parameters: {keys: %i[name format]}
       },
       technical_indicators: {
-        parameters: { keys: [] },
+        parameters: {keys: []},
         response: {
           keys: %i[enable full_name description type overlay parameters output_values tinting]
         }
       },
       symbol_search: {
-        parameters: { keys: %i[symbol outputsize], required: %i[symbol] }
+        parameters: {keys: %i[symbol outputsize], required: %i[symbol]}
       },
       earliest_timestamp: {
-        parameters: { keys: %i[symbol interval exchange] }
+        parameters: {keys: %i[symbol interval exchange]}
       },
       time_series: {
         parameters: {
@@ -56,16 +56,16 @@ module TwelvedataRuby
         }
       },
       price: {
-        parameters: { keys: %i[symbol exchange country type format], required: %i[symbol] }
+        parameters: {keys: %i[symbol exchange country type format], required: %i[symbol]}
       },
       eod: {
-        parameters: { keys: %i[symbol exchange country type], required: %i[symbol] }
+        parameters: {keys: %i[symbol exchange country type], required: %i[symbol]}
       },
       exchange_rate: {
-        parameters: { keys: %i[symbol format], required: %i[symbol] }
+        parameters: {keys: %i[symbol format], required: %i[symbol]}
       },
       currency_conversion: {
-        parameters: { keys: %i[symbol amount format], required: %i[symbol amount] }
+        parameters: {keys: %i[symbol amount format], required: %i[symbol amount]}
       },
       complex_data: {
         parameters: {
@@ -75,21 +75,23 @@ module TwelvedataRuby
         http_verb: :post
       },
       earnings: {
-        parameters: { keys: %i[symbol exchange country type period outputsize format], required: %i[symbol] }
+        parameters: {keys: %i[symbol exchange country type period outputsize format], required: %i[symbol]}
       },
       earnings_calendar: {
-        parameters: { keys: %i[format] }
+        parameters: {keys: %i[format]}
       }
-    }
+    }.freeze
 
     class << self
       def definitions
-        @definitions ||= DEFINITIONS.map do |k, v|
-          [k, v.merge(parameters: {
-                        keys: v[:parameters][:keys].push(APIKEY_KEY),
-                        required: (v[:parameters][:required] || []).push(APIKEY_KEY)
-                      })]
-        end.to_h
+        @definitions ||= DEFINITIONS.transform_values {|v|
+          v.merge(
+            parameters: {
+              keys: v[:parameters][:keys].push(APIKEY_KEY),
+              required: (v[:parameters][:required] || []).push(APIKEY_KEY)
+            }
+          )
+        }.to_h
       end
 
       def path_names
@@ -103,7 +105,7 @@ module TwelvedataRuby
 
     attr_reader :path_name, :params
 
-    def initialize(name, parameters = {})
+    def initialize(name, parameters={})
       @path_name = name.to_s.downcase.to_sym
       parameters = (parameters || {}).compact
       parameters[APIKEY_KEY] = parameters.delete(:api_key) unless parameters[APIKEY_KEY]
@@ -137,10 +139,12 @@ module TwelvedataRuby
       return @errors if @errors
 
       @errors = []
-      return @errors
-             .push(EndpointInvalidPathName.new(attrs: "/#{path_name}")) unless self.class.valid_path_name?(path_name)
+      unless self.class.valid_path_name?(path_name)
+        return @errors.push(EndpointInvalidPathName.new(attrs: "/#{path_name}"))
+      end
+
       @errors << parameters_keys_error(required_parameter_keys, params_keys, EndpointMissingRequiredParameters)
-      @errors << parameters_keys_error(params_keys, parameter_keys_definition, EndpointExtraParameters)
+      @errors << parameters_keys_error(params_keys, parameter_keys_definition, EndpointInvalidParameters)
       @errors.compact! || @errors
     end
 

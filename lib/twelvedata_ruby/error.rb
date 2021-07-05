@@ -10,6 +10,7 @@ module TwelvedataRuby
     }.freeze
 
     attr_reader :attrs, :message
+
     def initialize(attrs: nil, message: nil)
       @attrs = attrs
       @message = format((message || DEFAULT_MSGS[self.class.name]) + ": %s", @attrs)
@@ -19,7 +20,7 @@ module TwelvedataRuby
 
   class EndpointInvalidPathName < Error; end
 
-  class EndpointExtraParameters < Error; end
+  class EndpointInvalidParameters < Error; end
 
   class EndpointMissingRequiredParameters < Error; end
 

@@ -13,7 +13,7 @@ def reload!
   $VERBOSE = nil
   puts "Reloading with suppressed warning messages about 'already initialized'..."
   %w[lib].each do |dir|
-    Dir.glob("#{root_dir}/#{dir}/**/*.rb").each { |f| load(f) }
+    Dir.glob("#{root_dir}/#{dir}/**/*.rb").each {|f| load(f) }
   end
   $VERBOSE = orig_verbose
   true
