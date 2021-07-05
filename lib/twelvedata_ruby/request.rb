@@ -24,71 +24,74 @@ module TwelvedataRuby
 
     attr_reader :endpoint, :connect_timeout
 
-    def initialize(endpoint: nil, path_name: nil, params: nil, connect_timeout: nil)
-      self.endpoint = endpoint || Endpoint.new(path_name, params)
+    def initialize(endpoint: nil, endpoint_name: nil, params: nil, connect_timeout: nil)
+      self.endpoint = endpoint || Endpoint.new(endpoint_name, params)
       @connect_timeout = connect_timeout
     end
     def_delegator :endpoint, :path_name
 
-    def valid?
-      endpoint&.valid?
-    end
-
-    def format
-      params[:format] || DEFAULT_FORMAT
+    def fetch
+      return_nil_unless_valid { Client.new(request: self)&.fetch }
     end
 
     def filename
       params[:filename]
     end
 
-    def format_mime_type
-      FORMAT_MIME_TYPES[format]
+    def format
+      params[:format] || DEFAULT_FORMAT
     end
 
-    def http_verb
-      return nil unless endpoint.valid?
-
-      endpoint.definition[:http_verb] || DEFAULT_HTTP_VERB
+    def format_mime_type
+      FORMAT_MIME_TYPES[format]
     end
 
     def headers
       {headers: self.class.accept_header}
     end
 
-    def timeout
-      connect_timeout ? {timeout: {connect_timeout: connect_timeout}} : {}
+    def http_verb
+      return_nil_unless_valid { endpoint.definition[:http_verb] || DEFAULT_HTTP_VERB }
     end
 
     def options
       headers.merge(timeout)
     end
 
-    def route
-      "#{BASE_URL}/#{path_name}"
-    end
-
     def params
       {params: endpoint.params}
     end
 
+    def route
+      return_nil_unless_valid { "#{BASE_URL}/#{path_name}" }
+    end
+
+    def timeout
+      connect_timeout ? {timeout: {connect_timeout: connect_timeout}} : {}
+    end
+
     def to_h
-      {
-        http_verb: http_verb,
-        route: route
-      }.merge(params)
+      return_nil_unless_valid { {http_verb: http_verb, route: route}.merge(params) }
     end
 
     def to_a
-      [http_verb, route, params]
+      return_nil_unless_valid { [http_verb, route, params] }
     end
 
-    def fetch
-      Client.new(request: self)&.fetch
+    def valid?
+      endpoint&.valid?
     end
 
     private
 
     attr_writer :endpoint
+
+    def skip_block_unless(truthy_val, return_this=nil, &block)
+      truthy_val ? block.call : return_this
+    end
+
+    def return_nil_unless_valid(&block)
+      skip_block_unless(valid?) { block.call }
+    end
   end
 end
