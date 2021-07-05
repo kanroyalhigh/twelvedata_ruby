@@ -60,6 +60,20 @@ describe TwelvedataRuby::Endpoint do
       expect(invalid_endpoint.params_keys).to be_an_instance_of(Array)
     end
 
+    describe "#initialize" do
+      it "`name` param is case-insensitive, can be a String or Symbol, and will be transformed into downcased symbol" do
+        expect(described_class.new("api_usage").path_name).to eql(:api_usage)
+        expect(described_class.new("ApI_UsaGe").path_name).to eql(:api_usage)
+        expect(described_class.new(:ApI_UsaGe).path_name).to eql(:api_usage)
+      end
+
+      it "will removed `nil` values from `parameters` method param" do
+        endpoint_params = described_class.new(:quote, {symbol: nil, api_key: "api-key"}).params
+        expect(endpoint_params).to_not have_key(:symbol)
+        expect(endpoint_params).to have_key(:apikey)
+      end
+    end
+
     describe "valid/no errors  instance" do
       it "should return true in `#valid?`" do
         expect(valid_endpoint.valid?).to be true
