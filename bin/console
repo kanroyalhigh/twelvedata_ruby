@@ -4,12 +4,19 @@
 require "bundler/setup"
 require "twelvedata_ruby"
 
-# You can add fixtures and/or initialization code here to make experimenting
-# with your gem easier. You can also use a different console, if you like.
-
-# (If you use this, don't forget to add pry to your Gemfile!)
-# require "pry"
-# Pry.start
-
 require "irb"
+
+def reload!
+  root_dir = File.expand_path("..", __dir__)
+  orig_verbose = $VERBOSE
+  # suppresss annoying already initialized warnings
+  $VERBOSE = nil
+  puts "Reloading with suppressed warning messages about 'already initialized'..."
+  %w[lib].each do |dir|
+    Dir.glob("#{root_dir}/#{dir}/**/*.rb").each { |f| load(f) }
+  end
+  $VERBOSE = orig_verbose
+  true
+end
+
 IRB.start(__FILE__)
