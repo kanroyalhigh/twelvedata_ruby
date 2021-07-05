@@ -109,7 +109,7 @@ module TwelvedataRuby
       @path_name = name.to_s.downcase.to_sym
       parameters = (parameters || {}).compact
       parameters[APIKEY_KEY] = parameters.delete(:api_key) unless parameters[APIKEY_KEY]
-      @params = parameters
+      @params = parameters.compact
     end
 
     def definition
@@ -117,6 +117,8 @@ module TwelvedataRuby
     end
 
     def parameter_keys_definition
+      return nil unless definition
+
       return @parameter_keys_definition if @parameter_keys_definition&.any?
       @parameter_keys_definition = definition[:parameters][:keys]
       @parameter_keys_definition.push(:filename) if params_keys.include?(:format) && params[:format] == :csv
@@ -124,6 +126,8 @@ module TwelvedataRuby
     end
 
     def required_parameter_keys
+      return nil unless definition
+
       @required_parameter_keys ||= definition[:parameters][:required]
     end
 

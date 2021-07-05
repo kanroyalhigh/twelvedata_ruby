@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
+require "simplecov"
+SimpleCov.start
+require "webmock/rspec"
 require "twelvedata_ruby"
+require "twelvedata_ruby/endpoint"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -12,4 +16,6 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+  # see: https://relishapp.com/rspec/rspec-core/v/3-0/docs/configuration/global-namespace-dsl
+  config.expose_dsl_globally = true
 end
