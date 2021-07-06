@@ -1,6 +1,5 @@
 # TwelvedataRuby
 
-TwelvedataRuby
 
 TwelvedataRuby is a Ruby library that provides convenient ways to access the Twelve Data API to get stock, forex, crypto, and other financial data. First, a free API Key is required and it might be requested [here](https://twelvedata.com/pricing). Visit their [API's full documentation](https://twelvedata.com/doc)
 
@@ -60,7 +59,7 @@ resp2 = client.time_series(symbol: 'IBM,AAPL', interval: '1hour', format: :csv, 
 resp3 = client.quote(symbol: "USD/JPY")
 
 ...
-``
+```
 
 You can also access the endpoint via a `Request` instance
 
@@ -68,7 +67,7 @@ You can also access the endpoint via a `Request` instance
 response = TwelvedataRuby::Request.new(endpoint_name: :quote, params: {symbol: "GOOG"}).fetch
 ```
 
-or, instantiates several request objects first, then send the requests in one go. The library will fire up the multiple requests in parallel.
+or, instantiates several request objects first, then send them all simultaneously. The library will fire up the multiple requests in parallel.
 
 ```
 req1 = TwelvedataRuby::Request.new(endpoint_name: :quote, params: {symbol: "MSFT,USD/JPY,BTC/USD"})
