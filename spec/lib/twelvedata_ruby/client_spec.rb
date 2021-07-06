@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
-describe described_class do
+require "webmock/rspec"
+require "httpx/adapters/webmock"
+
+describe TwelvedataRuby::Client do
   describe "class constants" do
     it "API_KEY_ENV_NAME constant which is the ENV var name of the test api key from TWELVE DATA" do
       expect(described_class::API_KEY_ENV_NAME).not_to be_nil
@@ -20,11 +23,11 @@ describe described_class do
 
   describe "instance" do
     let(:endpoint) { TwelvedataRuby::Endpoint.new(:api_usage) }
-    let(:≈) { TwelvedataRuby::Request.new(endpoint: endpoint) }
+    let(:request) { TwelvedataRuby::Request.new(endpoint: endpoint) }
     let(:client) {
-      ->(options={}) { described_class.new(options) }
+      ->(options={}) { TwelvedataRuby::Client.new(options) }
     }
-    let(:default_client) { client }
+    let(:default_client) { client[{}] }
     describe "#initialize" do
       it "can instantiate with no arguments passed" do
         htpp_client = default_client

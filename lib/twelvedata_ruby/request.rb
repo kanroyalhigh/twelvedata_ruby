@@ -63,7 +63,7 @@ module TwelvedataRuby
       {params: endpoint.params}
     end
 
-    def route
+    def url
       return_nil_unless_valid { "#{BASE_URL}/#{path_name}" }
     end
 
@@ -72,11 +72,11 @@ module TwelvedataRuby
     end
 
     def to_h
-      return_nil_unless_valid { {http_verb: http_verb, route: route}.merge(params) }
+      return_nil_unless_valid { {http_verb: http_verb, url: url}.merge(params) }
     end
 
     def to_a
-      return_nil_unless_valid { [http_verb, route, params] }
+      return_nil_unless_valid { [http_verb, url, params] }
     end
 
     def valid?

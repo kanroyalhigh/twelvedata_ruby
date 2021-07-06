@@ -5,31 +5,36 @@ module TwelvedataRuby
     APIKEY_KEY = :apikey
     DEFINITIONS = {
       api_usage: {
-        parameters: {keys: %i[format]}
+        parameters: {keys: %i[format]},
+        response: {keys: %i[timestamp current_usage plan_limit]}
       },
       stocks: {
-        parameters: {
-          keys: %i[symbol exchange country type format]
-        }
+        parameters: {keys: %i[symbol exchange country type format]},
+        response: {data_keys: %i[symbol name currency exchange country type], collection: :data}
       },
       forex_pairs: {
-        parameters: {keys: %i[symbol currency_base currency_quote format]}
+        parameters: {keys: %i[symbol currency_base currency_quote format]},
+        response: {data_keys: %i[symbol currency_group currency_base currency_quote], collection: :data}
       },
       cryptocurrencies: {
         parameters: {keys: %i[symbol exchange currency_base currency_quote format]},
-        response: {}
+        response: {data_keys: %i[symbol available_exchanges currency_base currency_quote], collection: :data}
       },
       etf: {
-        parameters: {keys: %i[symbol format]}
+        parameters: {keys: %i[symbol format]},
+        response: {data_keys: %i[symbol name currency exchange], collection: :data}
       },
       indices: {
-        parameters: {keys: %i[symbol country format]}
+        parameters: {keys: %i[symbol country format]},
+        response: {data_keys: %i[symbol name country currency], collection: :data}
       },
       exchanges: {
-        parameters: {keys: %i[type name code country format]}
+        parameters: {keys: %i[type name code country format]},
+        response: {data_keys: %i[name country code timezone], collection: :data}
       },
       cryptocurrency_exchanges: {
-        parameters: {keys: %i[name format]}
+        parameters: {keys: %i[name format]},
+        response: {data_keys: %i[name], collection: :data}
       },
       technical_indicators: {
         parameters: {keys: []},
@@ -38,28 +43,59 @@ module TwelvedataRuby
         }
       },
       symbol_search: {
-        parameters: {keys: %i[symbol outputsize], required: %i[symbol]}
+        parameters: {keys: %i[symbol outputsize], required: %i[symbol]},
+        response: {
+          data_keys: %i[symbol instrument_name exchange exchange_timezone instrument_type country],
+          collection: :data
+        }
       },
       earliest_timestamp: {
-        parameters: {keys: %i[symbol interval exchange]}
+        parameters: {keys: %i[symbol interval exchange]},
+        response: {keys: %i[datetime unix_time]}
       },
       time_series: {
         parameters: {
           keys: %i[symbol interval exchange country type outputsize format],
           required: %i[symbol interval]
+        },
+        response: {
+          value_keys: %i[datetime open high low close volume],
+          collection: :values,
+          meta_keys: %i[symbol interval currency exchange_timezone exchange type]
         }
       },
       quote: {
         parameters: {
           keys: %i[symbol interval exchange country volume_time_period type format],
-          required: %i[symbol]
+          required: %i[symbol],
+          response: {
+            keys: %i[
+              symbol
+              name
+              exchange
+              currency
+              datetime
+              open
+              high
+              low
+              close
+              volume
+              previous_close
+              change
+              percent_change
+              average_volume
+              fifty_two_week
+            ]
+          }
         }
       },
       price: {
-        parameters: {keys: %i[symbol exchange country type format], required: %i[symbol]}
+        parameters: {keys: %i[symbol exchange country type format], required: %i[symbol]},
+        response: {keys: %i[price]}
       },
       eod: {
-        parameters: {keys: %i[symbol exchange country type], required: %i[symbol]}
+        parameters: {keys: %i[symbol exchange country type], required: %i[symbol]},
+        response: {keys: %i[symbol exchange currency datetime close]}
       },
       exchange_rate: {
         parameters: {keys: %i[symbol format], required: %i[symbol]}

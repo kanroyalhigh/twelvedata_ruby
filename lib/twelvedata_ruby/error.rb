@@ -13,7 +13,7 @@ module TwelvedataRuby
 
     def initialize(attrs: nil, message: nil)
       @attrs = attrs
-      @message = format((message || DEFAULT_MSGS[self.class.name]) + ": %s", @attrs)
+      @message = (message || DEFAULT_MSGS[self.class.name]) + ": %s" % @attrs
       super(@message)
     end
   end
@@ -41,7 +41,7 @@ module TwelvedataRuby
       @json = json
       @code = code || @json[:code]
       @attrs = @code
-      super(attrs: code, message: "#{@json[:message] || message}. Error code is")
+      super(attrs: @code, message: "#{@json[:message] || message}. Error code is")
     end
   end
 

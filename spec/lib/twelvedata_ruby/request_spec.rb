@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "webmock/rspec"
+require "httpx/adapters/webmock"
+
 describe TwelvedataRuby::Request do
   describe "class constants" do
     it "has `BASE_URL` constant and is equal to https://api.twelvedata.com" do
@@ -76,21 +79,26 @@ describe TwelvedataRuby::Request do
       let(:valid_request) { request[{endpoint: endpoint}] }
 
       it "returns a 3 element array in #to_a" do
-        expect(valid_request.to_a).to eq([valid_request.http_verb, valid_request.route, valid_request.params])
+        expect(valid_request.to_a).to eq([valid_request.http_verb, valid_request.url, valid_request.params])
       end
 
       it "returns the equivalent Hash in #to_h" do
         expect(valid_request.to_h).to eq(
           {
             http_verb: valid_request.http_verb,
-            route: valid_request.route
+            url: valid_request.url
           }.merge(valid_request.params)
         )
       end
 
       xit "fetches successfully the data from the api provider" do
-        # pending until we can put the webmock in place
-        expect(valid_request.fetch).to eq(true)
+        # see https://honeyryderchuck.gitlab.io/httpx/wiki/Webmock-Adapter
+        # WebMock.enable!
+        # stub_request(valid_request.http_verb, valid_request.url)
+        # .with(valid_request.headers).to_return(status: 200, body: fixture..., headers...)
+        # resp = valid_request.fetch
+        # puts resp.inspect
+        expect(valid_request.fetch).to eq(valid_request.client.response)
       end
     end
 
