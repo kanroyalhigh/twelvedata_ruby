@@ -3,6 +3,7 @@
 require "simplecov"
 SimpleCov.start
 require "twelvedata_ruby"
+require "support/file_fixture"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -16,4 +17,6 @@ RSpec.configure do |config|
   end
   # see: https://relishapp.com/rspec/rspec-core/v/3-0/docs/configuration/global-namespace-dsl
   config.expose_dsl_globally = true
+
+  config.include TwelvedataRuby::FileFixture
 end
