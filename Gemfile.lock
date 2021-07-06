@@ -69,12 +69,12 @@ PLATFORMS
   x86_64-darwin-18
 
 DEPENDENCIES
-  rake (>= 13.0.3)
+  rake (~> 13.0, >= 13.0.3)
   rspec (~> 3.10.0)
   rubocop (~> 1.17.0)
-  simplecov (>= 0.21.2)
+  simplecov (~> 0.21, >= 0.21.2)
   twelvedata_ruby!
-  webmock (>= 3.13.0)
+  webmock (~> 3.13, >= 3.13.0)
 
 BUNDLED WITH
    2.2.17
