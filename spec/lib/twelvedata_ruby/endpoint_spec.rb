@@ -2,6 +2,10 @@
 
 describe TwelvedataRuby::Endpoint do
   describe "class constants" do
+    it "has API_KEY_ENV_NAME constant which is the ENV var name of the test api key from TWELVE DATA" do
+      expect(described_class::API_KEY_ENV_NAME).not_to be_nil
+    end
+
     describe "`APIKEY_KEY`" do
       it "it holds the Twelve Data API api key request parameter name: `apikey`" do
         expect(described_class::APIKEY_KEY).to eql(:apikey)
@@ -45,10 +49,10 @@ describe TwelvedataRuby::Endpoint do
   describe "instance" do
     let(:api_usage) { :api_usage }
     let(:api_key) { "api-key" }
-    let(:valid_endpoint) { described_class.new(api_usage, api_key: api_key) }
+    let(:valid_endpoint) { described_class.new(api_usage, apikey: api_key) }
     let(:invalid_endpoint) { described_class.new(:invalid_endpoint_name, api_key: api_key) }
     let(:invalid_quote_endpoint) { described_class.new(:quote, api_key: api_key) }
-    let(:valid_quote_endpoint) { described_class.new(:quote, api_key: api_key, symbol: "IBM") }
+    let(:valid_quote_endpoint) { described_class.new(:quote, apikey: api_key, symbol: "IBM") }
 
     it "has instance attribute readers: `#path_name`, `#params`. `#params_keys` is one of the instance methods" do
       expect(valid_endpoint.path_name).to_not be eq(api_usage)

@@ -4,7 +4,6 @@ require "httpx"
 
 module TwelvedataRuby
   class Client
-    API_KEY_ENV_NAME = "TWELVEDATA_API_KEY"
     CONNECT_TIMEOUT = 120
 
     class << self
@@ -46,7 +45,7 @@ module TwelvedataRuby
     attr_writer :api_key, :endpoint, :request, :response
 
     def init_endpoint_request(name, params)
-      self.endpoint = Endpoint.new(name, (params || {}).merge(api_key: api_key))
+      self.endpoint = Endpoint.new(name, params || {})
       if endpoint.valid?
         self.request = Request.new(endpoint: endpoint)
         request.client = self
@@ -55,7 +54,6 @@ module TwelvedataRuby
     end
 
     def init_with_options_or_defaults(options)
-      self.api_key = options[:api_key] || ENV.fetch(API_KEY_ENV_NAME)
       self.connect_timeout = options[:connect_timeout] || CONNECT_TIMEOUT
       self.request = options[:request]
       self.endpoint = request&.endpoint || options[:endpoint]

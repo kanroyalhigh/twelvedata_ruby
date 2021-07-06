@@ -2,6 +2,7 @@
 
 module TwelvedataRuby
   class Endpoint
+    API_KEY_ENV_NAME = "TWELVEDATA_API_KEY"
     APIKEY_KEY = :apikey
     DEFINITIONS = {
       api_usage: {
@@ -143,9 +144,9 @@ module TwelvedataRuby
 
     def initialize(name, parameters={})
       @path_name = name.to_s.downcase.to_sym
-      parameters = (parameters || {}).compact
-      parameters[APIKEY_KEY] = parameters.delete(:api_key) unless parameters[APIKEY_KEY]
-      @params = parameters.compact
+      parameters ||= {}
+      parameters[APIKEY_KEY] ||= ENV.fetch(API_KEY_ENV_NAME)
+      @params = (parameters || {}).compact
     end
 
     def definition

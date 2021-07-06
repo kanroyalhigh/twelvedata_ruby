@@ -5,10 +5,6 @@ require "httpx/adapters/webmock"
 
 describe TwelvedataRuby::Client do
   describe "class constants" do
-    it "API_KEY_ENV_NAME constant which is the ENV var name of the test api key from TWELVE DATA" do
-      expect(described_class::API_KEY_ENV_NAME).not_to be_nil
-    end
-
     it "CONNECT_TIMEOUT constant which contains an integer value to be used as the default ms connect_timeout" do
       expect(described_class::CONNECT_TIMEOUT).to be_an_instance_of(Integer)
     end
@@ -50,16 +46,7 @@ describe TwelvedataRuby::Client do
       it "can instantiate with no request, and endpoint objects but just the endpoint_name, and endpoint params args" do
         http_client = client[{endpoint_name: :api_usage}]
         expect(http_client.endpoint).not_to be_nil
-        expect(http_client.request).to be_nil
-      end
-
-      it "will use the api key passed in api_key in options args" do
-        api_key_passed_client = client[{api_key: "my-api-key"}]
-        expect(api_key_passed_client.api_key).to eq("my-api-key")
-      end
-
-      it "will try to fetch the api key from ENV if no api_key was passed in the options args" do
-        expect(default_client.api_key).to eq(ENV.fetch(described_class::API_KEY_ENV_NAME))
+        expect(http_client.request).not_to be_nil
       end
 
       it "will use a connect_timeout value passed in the options args" do

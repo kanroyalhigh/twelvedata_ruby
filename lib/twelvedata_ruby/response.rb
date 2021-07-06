@@ -1,17 +1,14 @@
 # frozen_string_literal: true
 
 require "csv"
-require "forwardable"
 module TwelvedataRuby
   class Response
-    extend Forwardable
-
     CSV_COL_SEP = ";"
-    HTTP_STATUSES = {http_error: (400..10000), success: (200..299)}.freeze
+    HTTP_STATUSES = {http_error: (400..1_000), success: (200..299)}.freeze
     CONTENT_TYPE_HANDLERS = {
       json: {parser: :json_parser, dumper: :json_dumper},
       csv: {parser: :csv_parser, dumper: :csv_dumper},
-      plain: {parser: :plain_parser}
+      plain: {parser: :plain_parser, dumper: :plain_dumper}
     }.freeze
 
     class << self
@@ -34,12 +31,13 @@ module TwelvedataRuby
       end
     end
 
-    attr_reader :http_response
+    attr_reader :http_response, :headers, :body
 
-    def initialize(http_response)
+    def initialize(http_response:, headers: nil, body: nil)
       self.http_response = http_response
+      self.headers = headers || http_response.headers
+      self.body = body || http_response.body
     end
-    def_delegators :http_response, :headers, :body
 
     def attachment_filename
       return nil unless headers["content-disposition"]
@@ -98,6 +96,10 @@ module TwelvedataRuby
       CONTENT_TYPE_HANDLERS[content_type][:dumper]
     end
 
+    def plain_dumper
+      parsed_body.to_s
+    end
+
     def plain_parser
       body.to_s
     end
@@ -116,6 +118,6 @@ module TwelvedataRuby
 
     private
 
-    attr_writer :http_response
+    attr_writer :http_response, :headers, :body
   end
 end

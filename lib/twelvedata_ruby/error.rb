@@ -4,7 +4,7 @@ module TwelvedataRuby
   class Error < StandardError
     DEFAULT_MSGS = {
       "TwelvedataRuby::EndpointInvalidPathName" => "Invalid endpoint path name",
-      "TwelvedataRuby::EndpointExtraParameters" => "Extra parameters found",
+      "TwelvedataRuby::EndpointInvalidParameters" => "Invalid parameter keys found",
       "TwelvedataRuby::EndpointMissingRequiredParameters" => "Missing required parameters",
       "TwelvedataRuby::ResponseError" => "Encountered an error from the response"
     }.freeze
