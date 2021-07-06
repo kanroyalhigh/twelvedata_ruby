@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
-require "webmock/rspec"
-require "httpx/adapters/webmock"
+# require "webmock/rspec"
+# require "httpx/adapters/webmock"
 
 describe TwelvedataRuby::Client do
   describe "class constants" do
     it "CONNECT_TIMEOUT constant which contains an integer value to be used as the default ms connect_timeout" do
+      puts "described_class::CONNECT_TIMEOUT: #{described_class::CONNECT_TIMEOUT}"
       expect(described_class::CONNECT_TIMEOUT).to be_an_instance_of(Integer)
     end
   end
