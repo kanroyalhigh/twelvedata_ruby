@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     twelvedata_ruby (0.1.0)
-      httpx
+      httpx (~> 0.14.5)
 
 GEM
   remote: https://rubygems.org/
@@ -69,12 +69,12 @@ PLATFORMS
   x86_64-darwin-18
 
 DEPENDENCIES
-  rake
-  rspec
-  rubocop
-  simplecov
+  rake (>= 13.0.3)
+  rspec (~> 3.10.0)
+  rubocop (~> 1.17.0)
+  simplecov (>= 0.21.2)
   twelvedata_ruby!
-  webmock
+  webmock (>= 3.13.0)
 
 BUNDLED WITH
    2.2.17
