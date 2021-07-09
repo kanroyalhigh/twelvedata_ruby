@@ -169,6 +169,10 @@ module TwelvedataRuby
       self.query_params = query_params
     end
 
+    def default_apikey_params
+      {apikey: Client.instance.apikey}
+    end
+
     def definition
       @definition ||= self.class.definitions[name]
     end
@@ -198,7 +202,7 @@ module TwelvedataRuby
     end
 
     def query_params=(query_params)
-      assign_attribute(:query_params, query_params.compact)
+      assign_attribute(:query_params, default_apikey_params.merge(query_params.compact))
     end
 
     def required_parameters

@@ -1,16 +1,14 @@
 # frozen_string_literal: true
 
 require "forwardable"
-
 module TwelvedataRuby
   class Request
     extend Forwardable
 
-    BASE_URL = "https://api.twelvedata.com"
     DEFAULT_HTTP_VERB = :get
-    DEFAULT_FORMAT = :json
-    VALID_FORMATS = %i[json csv].freeze
     FORMAT_MIME_TYPES = {json: "application/json", csv: "text/csv"}.freeze
+    VALID_FORMATS = FORMAT_MIME_TYPES.freeze
+    DEFAULT_FORMAT = :json
 
     class << self
       def valid_formats
@@ -22,25 +20,27 @@ module TwelvedataRuby
       end
     end
 
-    attr_reader :endpoint, :connect_timeout
-    attr_accessor :client
+    attr_accessor :endpoint
 
-    def initialize(endpoint: nil, endpoint_name: nil, params: nil, connect_timeout: nil)
-      self.endpoint = endpoint || Endpoint.new(endpoint_name, params)
-      @connect_timeout = connect_timeout
+    def initialize(**options)
+      self.endpoint = Endpoint.new(options[:endpoint_name], **(options[:endpoint_params] || {}))
     end
-    def_delegator :endpoint, :path_name
+    def_delegators :endpoint, :name, :valid?, :query_params
+
+    def client
+      TwelvedataRuby.client
+    end
 
     def fetch
-      return_nil_unless_valid { (client || Client.new(request: self))&.fetch }
+      return_nil_unless_valid { client.fetch(self) }
     end
 
     def filename
-      params[:filename]
+      query_params[:filename]
     end
 
     def format
-      params[:format] || DEFAULT_FORMAT
+      query_params[:format] || DEFAULT_FORMAT
     end
 
     def format_mime_type
@@ -60,39 +60,26 @@ module TwelvedataRuby
     end
 
     def params
-      {params: endpoint.params}
+      {params: {apikey: client.apikey}.merge(endpoint.query_params)}
     end
 
-    def url
-      return_nil_unless_valid { "#{BASE_URL}/#{path_name}" }
-    end
-
-    def timeout
-      connect_timeout ? {timeout: {connect_timeout: connect_timeout}} : {}
+    def relative_url
+      return_nil_unless_valid { name.to_s }
     end
 
     def to_h
-      return_nil_unless_valid { {http_verb: http_verb, url: url}.merge(params) }
+      return_nil_unless_valid { {http_verb: http_verb, relative_url: relative_url}.merge(params) }
     end
 
     def to_a
-      return_nil_unless_valid { [http_verb, url, params] }
+      return_nil_unless_valid { [http_verb, relative_url, params] }
     end
-
-    def valid?
-      endpoint&.valid?
-    end
+    alias build to_a
 
     private
 
-    attr_writer :endpoint
-
-    def skip_block_unless(truthy_val, return_this=nil, &block)
-      truthy_val ? block.call : return_this
-    end
-
     def return_nil_unless_valid(&block)
-      skip_block_unless(valid?) { block.call }
+      Utils.return_nil_unless_true(valid?) { block.call }
     end
   end
 end
