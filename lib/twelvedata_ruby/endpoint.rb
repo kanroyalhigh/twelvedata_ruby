@@ -2,8 +2,6 @@
 
 module TwelvedataRuby
   class Endpoint
-    API_KEY_ENV_NAME = "TWELVEDATA_API_KEY"
-    APIKEY_KEY = :apikey
     DEFINITIONS = {
       api_usage: {
         parameters: {keys: %i[format]},
@@ -69,25 +67,25 @@ module TwelvedataRuby
         parameters: {
           keys: %i[symbol interval exchange country volume_time_period type format],
           required: %i[symbol],
-          response: {
-            keys: %i[
-              symbol
-              name
-              exchange
-              currency
-              datetime
-              open
-              high
-              low
-              close
-              volume
-              previous_close
-              change
-              percent_change
-              average_volume
-              fifty_two_week
-            ]
-          }
+        },
+        response: {
+          keys: %i[
+            symbol
+            name
+            exchange
+            currency
+            datetime
+            open
+            high
+            low
+            close
+            volume
+            previous_close
+            change
+            percent_change
+            average_volume
+            fifty_two_week
+          ]
         }
       },
       price: {
@@ -99,23 +97,42 @@ module TwelvedataRuby
         response: {keys: %i[symbol exchange currency datetime close]}
       },
       exchange_rate: {
-        parameters: {keys: %i[symbol format], required: %i[symbol]}
+        parameters: {keys: %i[symbol format], required: %i[symbol]},
+        response: {keys: %i[symbol rate timestamp]}
       },
       currency_conversion: {
-        parameters: {keys: %i[symbol amount format], required: %i[symbol amount]}
+        parameters: {keys: %i[symbol amount format], required: %i[symbol amount]},
+        response: {keys: %i[symbol rate amount timestamp]}
       },
       complex_data: {
         parameters: {
           keys: %i[symbols intervals start_date end_date dp order timezone methods name],
           required: %i[symbols intervals start_date end_date]
         },
+        response: {keys: %i[data status]},
         http_verb: :post
       },
       earnings: {
-        parameters: {keys: %i[symbol exchange country type period outputsize format], required: %i[symbol]}
+        parameters: {keys: %i[symbol exchange country type period outputsize format], required: %i[symbol]},
+        response: {keys: %i[date time eps_estimate eps_actual difference surprise_prc]}
       },
       earnings_calendar: {
-        parameters: {keys: %i[format]}
+        parameters: {keys: %i[format]},
+        response: {
+          keys: %i[
+            symbol
+            name
+            currency
+            exchange
+            country
+            time
+            eps_estimate
+            eps_estimate
+            eps_actual
+            difference
+            surprise_prc
+          ]
+        }
       }
     }.freeze
 
@@ -124,76 +141,117 @@ module TwelvedataRuby
         @definitions ||= DEFINITIONS.transform_values {|v|
           v.merge(
             parameters: {
-              keys: v[:parameters][:keys].push(APIKEY_KEY),
-              required: (v[:parameters][:required] || []).push(APIKEY_KEY)
+              keys: v[:parameters][:keys].push(:apikey),
+              required: (v[:parameters][:required] || []).push(:apikey)
             }
           )
         }.to_h
       end
 
-      def path_names
-        @path_names ||= definitions.keys
+      def names
+        @names ||= definitions.keys
       end
 
-      def valid_path_name?(name)
-        path_names.include?(name.downcase.to_sym)
+      def valid_name?(name)
+        names.include?(name.to_sym)
       end
+
+      def valid_params?(name, **params)
+        new(name, **params).valid?
+      end
+      alias valid? valid_params?
     end
 
-    attr_reader :path_name, :params
+    attr_reader :name, :query_params
 
-    def initialize(name, parameters={})
-      @path_name = name.to_s.downcase.to_sym
-      parameters ||= {}
-      parameters[APIKEY_KEY] ||= ENV.fetch(API_KEY_ENV_NAME)
-      @params = (parameters || {}).compact
+    def initialize(name, **query_params)
+      self.name = name
+      self.query_params = query_params
     end
 
     def definition
-      @definition ||= self.class.definitions[path_name]
-    end
-
-    def parameter_keys_definition
-      return nil unless definition
-
-      return @parameter_keys_definition if @parameter_keys_definition&.any?
-      @parameter_keys_definition = definition[:parameters][:keys]
-      @parameter_keys_definition.push(:filename) if params_keys.include?(:format) && params[:format] == :csv
-      @parameter_keys_definition
-    end
-
-    def required_parameter_keys
-      return nil unless definition
-
-      @required_parameter_keys ||= definition[:parameters][:required]
-    end
-
-    def params_keys
-      @params_keys ||= params.keys
-    end
-
-    def valid?
-      errors.empty? ? true : false
+      @definition ||= self.class.definitions[name]
     end
 
     def errors
-      return @errors if @errors
+      (@errors || {}).compact
+    end
 
-      @errors = []
-      unless self.class.valid_path_name?(path_name)
-        return @errors.push(EndpointInvalidPathName.new(attrs: "/#{path_name}"))
-      end
+    def name=(name)
+      assign_attribute(:name, name.to_s.downcase.to_sym)
+    end
 
-      @errors << parameters_keys_error(required_parameter_keys, params_keys, EndpointMissingRequiredParameters)
-      @errors << parameters_keys_error(params_keys, parameter_keys_definition, EndpointInvalidParameters)
-      @errors.compact! || @errors
+    def parameters
+      return @parameters if definition.nil? || @parameters
+
+      params = definition[:parameters]
+      params.push(:filename) if params.include?(:format) && query_parameters[:format] == :csv
+      params
+    end
+
+    def parameters_keys
+      parameters&.send(:[], :keys)
+    end
+
+    def query_params_keys
+      query_params.keys
+    end
+
+    def query_params=(query_params)
+      assign_attribute(:query_params, query_params.compact)
+    end
+
+    def required_parameters
+      parameters&.send(:[], :required)
+    end
+
+    def valid?
+      valid_name? && valid_query_params?
+    end
+
+    def valid_at_attributes?(*attrs)
+      errors.values_at(*attrs).compact.empty?
+    end
+
+    def valid_name?
+      valid_at_attributes?(:name)
+    end
+
+    def valid_query_params?
+      valid_at_attributes?(:parameters_keys, :required_parameters)
     end
 
     private
 
-    def parameters_keys_error(minuend_keys, subtrahend_keys, error_klass)
-      diff_keys = minuend_keys - subtrahend_keys
-      diff_keys.empty? ? nil : error_klass.new(attrs: diff_keys.join(", "))
+    def assign_attribute(attr_name, value)
+      @parameters = nil
+      @definition = nil
+      instance_variable_set(:"@#{attr_name}", value)
+      send(:"validate_#{attr_name}")
+      send(attr_name)
+    end
+
+    def init_error(attr_name, invalid_values, error_klass = nil)
+      error_klass ||= Kernel.const_get("#{self.class.name}#{Utils.camelize(attr_name)}Error")
+      error_klass.new(endpoint: self, invalid: invalid_values)
+    end
+
+    def update_errors(attrib, invalids, klass=nil)
+      @errors = errors.merge(attrib => !invalids.nil? && !invalids.empty? ? init_error(attrib, invalids, klass) : nil)
+    end
+
+    def validate_name
+      is_valid = self.class.valid_name?(name)
+      invalid_name = name.nil? || name.empty? ? "a blank name" : name
+      update_errors(:name, is_valid ? nil : invalid_name)
+      validate_query_params if is_valid && query_params && !valid_query_params?
+    end
+
+    def validate_query_params
+      return update_errors(:required_parameters, "Invalid name", EndpointError) unless parameters_keys
+
+      update_errors(:required_parameters, required_parameters.difference(query_params_keys))
+      update_errors(:parameters_keys, query_params_keys.difference(parameters_keys))
     end
   end
 end

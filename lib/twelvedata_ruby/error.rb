@@ -3,26 +3,42 @@
 module TwelvedataRuby
   class Error < StandardError
     DEFAULT_MSGS = {
-      "TwelvedataRuby::EndpointInvalidPathName" => "Invalid endpoint path name",
-      "TwelvedataRuby::EndpointInvalidParameters" => "Invalid parameter keys found",
-      "TwelvedataRuby::EndpointMissingRequiredParameters" => "Missing required parameters",
-      "TwelvedataRuby::ResponseError" => "Encountered an error from the response"
+      "EndpointError" => "Endpoint is not valid. %{invalid}",
+      "EndpointNameError" => "`%{invalid}` is not a correct endpoint. Valid values are: `%{valid_names}`",
+      "EndpointParametersKeysError" => "Invalid parameters found: `%{invalid}`. Valid parameters for `%{name}` "\
+        "endpoint are: `%{parameters}`. Please see: `Twelvedata::Endpoint#parameters` for more details",
+      "EndpointRequiredParametersError" => "Missing values for required parameters: `%{invalid}`. "\
+        "`%{name}` endpoint required parameters are: `%{required}`.",
+      "ResponseError" => "Encountered an error from the response"
     }.freeze
 
-    attr_reader :attrs, :message
+    attr_reader :attrs
 
-    def initialize(attrs: nil, message: nil)
-      @attrs = attrs
-      @message = (message || DEFAULT_MSGS[self.class.name]) + ": %s" % @attrs
-      super(@message)
+    def initialize(args = {})
+      @attrs = args[:attrs] || {}
+      super((args[:message] || DEFAULT_MSGS[Utils.demodulize(self.class)]) % @attrs)
+    end
+  end
+  class EndpointError < Error
+    def initialize(**args)
+      endpoint = args[:endpoint]
+      super(
+        attrs: {
+          name: endpoint.name,
+          invalid: args[:invalid],
+          valid_names: endpoint.class.names.join(", "),
+          parameters: endpoint&.parameters_keys&.send(:join, ", "),
+          required: endpoint&.required_parameters&.send(:join, ", ")
+        }
+      )
     end
   end
 
-  class EndpointInvalidPathName < Error; end
+  class EndpointNameError < EndpointError; end
 
-  class EndpointInvalidParameters < Error; end
+  class EndpointParametersKeysError < EndpointError; end
 
-  class EndpointMissingRequiredParameters < Error; end
+  class EndpointRequiredParametersError < EndpointError; end
 
   class ResponseError < Error
     ERROR_CODES_MAP = {

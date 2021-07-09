@@ -2,23 +2,14 @@
 
 describe TwelvedataRuby::Endpoint do
   describe "class constants" do
-    it "has API_KEY_ENV_NAME constant which is the ENV var name of the test api key from TWELVE DATA" do
-      expect(described_class::API_KEY_ENV_NAME).not_to be_nil
-    end
-
-    describe "`APIKEY_KEY`" do
-      it "it holds the Twelve Data API api key request parameter name: `apikey`" do
-        expect(described_class::APIKEY_KEY).to eql(:apikey)
-      end
-    end
-
-    describe "`DEFINITIONS`" do
-      it "is a Hash class constant" do
+    describe "DEFINITIONS" do
+      it "is an instance of Hash and is frozen" do
         expect(described_class::DEFINITIONS).to be_an_instance_of(Hash)
+        expect(described_class::DEFINITIONS).to be_frozen
       end
 
-      it "has :parameters key to all its values" do
-        expect(described_class::DEFINITIONS.values).to all(have_key(:parameters))
+      it "all the values have `:parameters` and `:response` keys" do
+        expect(described_class::DEFINITIONS.values).to all(include(:parameters, :response))
       end
     end
   end
@@ -29,92 +20,129 @@ describe TwelvedataRuby::Endpoint do
         expect(described_class.definitions).to be_instance_of(Hash)
       end
 
-      it "is based on the #{described_class.name}::DEFINITIONS Hash constant" do
+      it "the returned Hash instance is based on the #{described_class.name}::DEFINITIONS constant" do
         expect(described_class.definitions.keys).to eq(described_class::DEFINITIONS.keys)
       end
     end
 
-    describe ".path_names" do
-      it "returns all the valid endpoint names" do
-        expect(described_class.path_names).to eq(described_class.definitions.keys)
+    describe ".names and .valid_name?" do
+      it ".names class method returns all the keys from .definitions" do
+        expect(described_class.names).to eq(described_class.definitions.keys)
       end
 
-      it "has all valid endpoint names" do
-        not_valid_endpoints = described_class.path_names.reject {|p| TwelvedataRuby::Endpoint.valid_path_name?(p) }
-        expect(not_valid_endpoints).to be_empty
+      it "the returned names of .names class method are all valid names as confirmed from .valid_name? class method" do
+        expect(described_class.names.map {|name| described_class.valid_name?(name) }).to all(eq(true))
+      end
+    end
+
+    describe ".valid_params?" do
+      it "should return true when passed with valid query params" do
+        expect(described_class.valid_params?(:api_usage, apikey: "ahjasas")).to eq(true)
+      end
+
+      it "should return false on an invalid or blank or empty query params" do
+        expect(described_class.valid_params?(:api_usage)).to eq(false)
+        expect(described_class.valid_params?(:api_usage, **{})).to eq(false)
+        expect(described_class.valid_params?(:api_usage, **{invalid: ""})).to eq(false)
+      end
+
+      it ".valid? is an alias method" do
+        expect(described_class.method(:valid?)).to eq(described_class.method(:valid_params?))
       end
     end
   end
 
   describe "instance" do
-    let(:api_usage) { :api_usage }
-    let(:api_key) { "api-key" }
-    let(:valid_endpoint) { described_class.new(api_usage, apikey: api_key) }
-    let(:invalid_endpoint) { described_class.new(:invalid_endpoint_name, api_key: api_key) }
-    let(:invalid_quote_endpoint) { described_class.new(:quote, api_key: api_key) }
-    let(:valid_quote_endpoint) { described_class.new(:quote, apikey: api_key, symbol: "IBM") }
+    let(:endpoint_attribs) { {name: :api_usage, query_params: {apikey: "apikey"}} }
+    subject { described_class.new(endpoint_attribs[:name], **(endpoint_attribs[:query_params] || {})) }
 
-    it "has instance attribute readers: `#path_name`, `#params`. `#params_keys` is one of the instance methods" do
-      expect(valid_endpoint.path_name).to_not be eq(api_usage)
-      expect(valid_endpoint.params).to be_an_instance_of(Hash)
-      expect(valid_endpoint.params_keys).to be_an_instance_of(Array)
-
-      expect(invalid_endpoint.path_name).to_not be eq(:invalid_endpoint_name)
-      expect(invalid_endpoint.params).to be_an_instance_of(Hash)
-      expect(invalid_endpoint.params_keys).to be_an_instance_of(Array)
+    it "should be initialized" do
+      is_expected.to_not be_nil
     end
 
-    describe "#initialize" do
-      it "`name` param is case-insensitive, can be a String or Symbol, and will be transformed into downcased symbol" do
-        expect(described_class.new("api_usage").path_name).to eql(:api_usage)
-        expect(described_class.new("ApI_UsaGe").path_name).to eql(:api_usage)
-        expect(described_class.new(:ApI_UsaGe).path_name).to eql(:api_usage)
-      end
-
-      it "will removed `nil` values from `parameters` method param" do
-        endpoint_params = described_class.new(:quote, {symbol: nil, api_key: "api-key"}).params
-        expect(endpoint_params).to_not have_key(:symbol)
-        expect(endpoint_params).to have_key(:apikey)
-      end
+    it "#name and #query_params should return the correct values" do
+      expect(subject.name).to eq(endpoint_attribs[:name])
+      expect(subject.query_params).to eq(endpoint_attribs[:query_params])
     end
 
-    describe "valid/no errors  instance" do
-      it "should return true in `#valid?`" do
-        expect(valid_endpoint.valid?).to be true
-        expect(valid_quote_endpoint.valid?).to be true
+    it "#name automatically converts a given name string into a downcased symbol" do
+      subject.name = "api_usage"
+      expect(subject.name).to eq(:api_usage)
+      subject.name = "Api_USAge"
+      expect(subject.name).to eq(:api_usage)
+    end
+
+    context "valid instance" do
+      let(:definition) { described_class.definitions[subject.name] }
+
+      it "#errors returns an empty hash" do
+        errors = subject.errors
+        expect(errors).to be_an_instance_of(Hash)
+        expect(errors).to be_empty
       end
 
-      it "should return a Hash instance in `#definition` and `#parameter_keys_definition`" do
-        expect(valid_endpoint.definition).to be_an_instance_of(Hash)
-        expect(valid_endpoint.parameter_keys_definition).to be_an_instance_of(Array)
+      it "#query_params_keys returns a valid array of keys" do
+        expect(subject.query_params_keys).to eq(endpoint_attribs[:query_params].keys)
       end
 
-      it "has empty array returned in `#errors`" do
-        expect(valid_endpoint.errors).to be_empty
-        expect(valid_quote_endpoint.errors).to be_empty
+      it "#required_parameters returns a valid array of keys" do
+        expect(subject.required_parameters).to eq(definition[:parameters][:required])
       end
 
-      it "has required parameters for all endpoints as apikey parameter is needed to them all" do
-        expect(valid_endpoint.required_parameter_keys).to_not be_empty
-        expect(valid_quote_endpoint.required_parameter_keys).to_not be_empty
+      it "#parameters_keys returns a valid array of keys" do
+        expect(subject.parameters_keys).to eq(definition[:parameters][:keys])
+      end
+
+      it "#valid? returns true" do
+        expect(subject).to be_valid
       end
     end
 
-    describe "invalid/erroneous instance" do
-      it "will return nil in `#definition` and `#parameter_keys_definition` instance methods" do
-        expect(invalid_endpoint.definition).to be_nil
-        expect(invalid_endpoint.parameter_keys_definition).to be_nil
+    context "invalid instance" do
+      let(:endpoint_attribs) { {} }
+      it "when name is nil and query_params is nil" do
+        is_expected.to_not be_valid
+        is_expected.to_not be_valid_name
+        is_expected.to_not be_valid_query_params
+        expect(subject.errors[:name]).to be_an_instance_of(TwelvedataRuby::EndpointNameError)
+        expect(subject.errors[:required_parameters]).to be_an_instance_of(TwelvedataRuby::EndpointError)
       end
 
-      it "`#valid?` will return false  and `Twelvedata::EndpointInvalidPathName` is one of the `#errors`" do
-        expect(invalid_endpoint.valid?).to be false
-        expect(invalid_endpoint.errors).to include(TwelvedataRuby::EndpointInvalidPathName)
+      it "when given an invalid name" do
+        subject.name = :invalid
+        expect(subject.name).to eq(:invalid)
+        is_expected.to_not be_valid
+        is_expected.to_not be_valid_name
+        is_expected.to_not be_valid_query_params
+        expect(subject.errors[:name]).to be_an_instance_of(TwelvedataRuby::EndpointNameError)
       end
 
-      it "will make sure the required parameters should have values" do
-        expect(invalid_quote_endpoint.required_parameter_keys).to include(:symbol)
-        expect(invalid_quote_endpoint.params[:symbol]).to be_nil
-        expect(invalid_quote_endpoint.errors).to include(TwelvedataRuby::EndpointMissingRequiredParameters)
+      it "when given a valid name and invalid query params" do
+        subject.name = :api_usage
+        subject.query_params = {invalid_param_key: ""}
+        is_expected.to_not be_valid
+        is_expected.to be_valid_name
+        is_expected.to_not be_valid_query_params
+        expect(subject.errors[:parameters_keys]).to be_instance_of(TwelvedataRuby::EndpointParametersKeysError)
+      end
+
+      it "when given a valid name and missing required query parameters" do
+        subject.name = :quote
+        subject.query_params = {apikey: "apikey"}
+        is_expected.to_not be_valid
+        is_expected.to be_valid_name
+        is_expected.to_not be_valid_query_params
+        expect(subject.errors[:required_parameters]).to be_instance_of(TwelvedataRuby::EndpointRequiredParametersError)
+      end
+
+      it "can be corrected and become a valid instance" do
+        is_expected.to_not be_valid
+        subject.name = :api_usage
+        is_expected.to be_valid_name
+        is_expected.to_not be_valid_query_params
+        subject.query_params = {apikey: "apikey"}
+        is_expected.to be_valid_query_params
+        is_expected.to be_valid
       end
     end
   end
