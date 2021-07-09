@@ -25,6 +25,12 @@ describe TwelvedataRuby::Endpoint do
       end
     end
 
+    describe ".default_apikey_params" do
+      it "is Hash instance with :apikey and value equals to Client.instance.apikey" do
+        expect(described_class.default_apikey_params).to eql({apikey: TwelvedataRuby::Client.instance.apikey})
+      end
+    end
+
     describe ".names and .valid_name?" do
       it ".names class method returns all the keys from .definitions" do
         expect(described_class.names).to eq(described_class.definitions.keys)
@@ -41,9 +47,9 @@ describe TwelvedataRuby::Endpoint do
       end
 
       it "should return false on an invalid or blank or empty query params" do
-        expect(described_class.valid_params?(:api_usage)).to eq(false)
-        expect(described_class.valid_params?(:api_usage, **{})).to eq(false)
-        expect(described_class.valid_params?(:api_usage, **{invalid: ""})).to eq(false)
+        expect(described_class.valid_params?(:quote)).to eq(false)
+        expect(described_class.valid_params?(:quote, **{})).to eq(false)
+        expect(described_class.valid_params?(:quote, **{invalid: ""})).to eq(false)
       end
 
       it ".valid? is an alias method" do
@@ -53,7 +59,8 @@ describe TwelvedataRuby::Endpoint do
   end
 
   describe "instance" do
-    let(:endpoint_attribs) { {name: :api_usage, query_params: {apikey: "apikey"}} }
+    let(:endpoint_attribs) { {name: :api_usage} }
+    let(:default_query_params) { described_class.default_apikey_params }
     subject { described_class.new(endpoint_attribs[:name], **(endpoint_attribs[:query_params] || {})) }
 
     it "should be initialized" do
@@ -62,7 +69,8 @@ describe TwelvedataRuby::Endpoint do
 
     it "#name and #query_params should return the correct values" do
       expect(subject.name).to eq(endpoint_attribs[:name])
-      expect(subject.query_params).to eq(endpoint_attribs[:query_params])
+      expect(subject.query_params).to eq(default_query_params)
+      expect(subject.query_params[:apikey]).to eq(ENV["TWELVEDATA_API_KEY"])
     end
 
     it "#name automatically converts a given name string into a downcased symbol" do
@@ -82,7 +90,14 @@ describe TwelvedataRuby::Endpoint do
       end
 
       it "#query_params_keys returns a valid array of keys" do
-        expect(subject.query_params_keys).to eq(endpoint_attribs[:query_params].keys)
+        endpoint_attribs.merge!(query_params: {format: :csv})
+        expect(subject.query_params_keys).to eq(default_query_params.merge(endpoint_attribs[:query_params]).keys)
+      end
+
+      it ":apikey can be overriden from the passed method parameters in #new" do
+        endpoint_attribs.merge!(query_params: {apikey: "different-apikey"})
+        expect(endpoint_attribs[:apikey]).to_not eq(default_query_params[:apikey])
+        expect(subject.query_params[:apikey]).to eq(endpoint_attribs[:query_params][:apikey])
       end
 
       it "#required_parameters returns a valid array of keys" do
@@ -137,10 +152,10 @@ describe TwelvedataRuby::Endpoint do
 
       it "can be corrected and become a valid instance" do
         is_expected.to_not be_valid
-        subject.name = :api_usage
+        subject.name = :quote
         is_expected.to be_valid_name
         is_expected.to_not be_valid_query_params
-        subject.query_params = {apikey: "apikey"}
+        subject.query_params = {symbol: "IBM"}
         is_expected.to be_valid_query_params
         is_expected.to be_valid
       end

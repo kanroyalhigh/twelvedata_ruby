@@ -2,6 +2,9 @@
 
 module TwelvedataRuby
   class Endpoint
+    DEFAULT_FORMAT = :json
+    VALID_FORMATS = [DEFAULT_FORMAT, :csv].freeze
+
     DEFINITIONS = {
       api_usage: {
         parameters: {keys: %i[format]},
@@ -152,6 +155,10 @@ module TwelvedataRuby
         @names ||= definitions.keys
       end
 
+      def default_apikey_params
+        {apikey: Client.instance.apikey}
+      end
+
       def valid_name?(name)
         names.include?(name.to_sym)
       end
@@ -167,10 +174,6 @@ module TwelvedataRuby
     def initialize(name, **query_params)
       self.name = name
       self.query_params = query_params
-    end
-
-    def default_apikey_params
-      {apikey: Client.instance.apikey}
     end
 
     def definition
@@ -202,7 +205,12 @@ module TwelvedataRuby
     end
 
     def query_params=(query_params)
-      assign_attribute(:query_params, default_apikey_params.merge(query_params.compact))
+      if (query_params[:format] && parameters_keys || []).include?(:format) &&
+          !VALID_FORMATS.include?(query_params[:format])
+        query_params[:format] = DEFAULT_FORMAT
+      end
+      query_params.delete(:filename) if query_params[:filename] && query_params[:format] != :csv
+      assign_attribute(:query_params, self.class.default_apikey_params.merge(query_params.compact))
     end
 
     def required_parameters
@@ -235,7 +243,7 @@ module TwelvedataRuby
       send(attr_name)
     end
 
-    def init_error(attr_name, invalid_values, error_klass = nil)
+    def init_error(attr_name, invalid_values, error_klass=nil)
       error_klass ||= Kernel.const_get("#{self.class.name}#{Utils.camelize(attr_name)}Error")
       error_klass.new(endpoint: self, invalid: invalid_values)
     end
