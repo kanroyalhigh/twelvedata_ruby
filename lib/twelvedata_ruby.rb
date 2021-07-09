@@ -11,7 +11,7 @@ module TwelvedataRuby
 
   def self.client(**options)
     client = Client.instance
-    client.options = options
+    client.options = (client.options || {}).merge(options)
     client
   end
 end
