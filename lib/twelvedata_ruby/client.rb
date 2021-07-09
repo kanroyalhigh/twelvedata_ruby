@@ -51,12 +51,13 @@ module TwelvedataRuby
     end
 
     def fetch(request)
-      request&.valid? ? Response.resolve(self.class.request(request)) : nil
+      return nil unless request
+      request.valid? ? Response.resolve(self.class.request(request)) : {errors: request.errors}
     end
 
     # can be client.api_usage.fetch or client.api_usage; client.fetch
     def method_missing(endpoint_name, **endpoint_params, &_block)
-      create_endpoint_method(endpoint_name, endpoint_params) || super
+      try_fetch(endpoint_name, endpoint_params) || super
     end
 
     def options
@@ -64,23 +65,24 @@ module TwelvedataRuby
     end
 
     def respond_to_missing?(endpoint_name, _include_all=false)
-      Endpoint.valid_path_name?(endpoint_name) || super
+      Utils.return_nil_unless_true(Endpoint.valid_name?(endpoint_name)) {
+        define_endpoint_method(endpoint_name)
+      } || super
     end
 
     private
 
     def build_request(endpoint_name, endpoint_params)
-      request = Request.new(endpoint_name: endpoint_name, endpoint_params: endpoint_params)
-      request.valid? ? request : nil
+      Request.new(endpoint_name, **endpoint_params)
     end
 
-    def create_endpoint_method(endpoint_name, endpoint_params)
-      request = build_request(endpoint_name, endpoint_params)
-      Utils.return_nil_unless_true(request.valid?) do
-        self.class.define_method(endpoint_name) do |params={}|
-          fetch(build_request(__method__, params))
-        end
-        fetch(request)
+    def try_fetch(endpoint_name, endpoint_params)
+      respond_to?(endpoint_name) ? fetch(build_request(endpoint_name, endpoint_params)) : nil
+    end
+
+    def define_endpoint_method(endpoint_name)
+      self.class.define_method(endpoint_name) do |**qparams|
+        fetch(build_request(__method__, qparams))
       end
     end
 
