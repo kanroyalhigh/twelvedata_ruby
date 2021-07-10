@@ -2,8 +2,11 @@
 
 require "simplecov"
 SimpleCov.start
-require "twelvedata_ruby"
+require "webmock/rspec"
+require "httpx/adapters/webmock"
 require "support/file_fixture"
+require "twelvedata_ruby"
+require "support/stub_http"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -18,5 +21,8 @@ RSpec.configure do |config|
   # see: https://relishapp.com/rspec/rspec-core/v/3-0/docs/configuration/global-namespace-dsl
   config.expose_dsl_globally = true
 
+  WebMock.enable!
+
   config.include TwelvedataRuby::FileFixture
+  config.include TwelvedataRuby::StubHttp
 end

@@ -50,8 +50,7 @@ module TwelvedataRuby
     end
 
     def content_type
-      # TODO: use regexp
-      @content_type ||= headers["content-type"].split(";").first.split("/").last.to_sym
+      @content_type ||= headers["content-type"].match(%r{^.+/([a-z]+).*$})&.send(:[], 1)&.to_sym
     end
 
     def csv_parser

@@ -197,7 +197,9 @@ module TwelvedataRuby
     end
 
     def parameters_keys
-      parameters&.send(:[], :keys)
+      keys = parameters&.send(:[], :keys)
+      keys.push(:filename) if keys && query_params && query_params[:format] == :csv
+      keys
     end
 
     def query_params_keys
@@ -205,7 +207,7 @@ module TwelvedataRuby
     end
 
     def query_params=(query_params)
-      if (query_params[:format] && parameters_keys || []).include?(:format) &&
+      if (parameters_keys || []).include?(:format) &&
           !VALID_FORMATS.include?(query_params[:format])
         query_params[:format] = DEFAULT_FORMAT
       end
