@@ -70,7 +70,7 @@ describe TwelvedataRuby::Endpoint do
     it "#name and #query_params should return the correct values" do
       expect(subject.name).to eq(endpoint_attribs[:name])
       expect(subject.query_params).to eq(default_query_params)
-      expect(subject.query_params[:apikey]).to eq(ENV["TWELVEDATA_API_KEY"])
+      expect(subject.query_params[:apikey]).to eq(TwelvedataRuby::Client.instance.apikey)
     end
 
     it "#name automatically converts a given name string into a downcased symbol" do
@@ -78,6 +78,11 @@ describe TwelvedataRuby::Endpoint do
       expect(subject.name).to eq(:api_usage)
       subject.name = "Api_USAge"
       expect(subject.name).to eq(:api_usage)
+    end
+
+    it "query_params[:format] value will be forced to DEFAULT_FORMAT if given format is not valid" do
+      endpoint_attribs.merge!(query_params: {format: :not_valid_format})
+      expect(subject.query_params[:format]).to eq(described_class::DEFAULT_FORMAT)
     end
 
     context "valid instance" do
@@ -130,6 +135,7 @@ describe TwelvedataRuby::Endpoint do
         is_expected.to_not be_valid_name
         is_expected.to_not be_valid_query_params
         expect(subject.errors[:name]).to be_an_instance_of(TwelvedataRuby::EndpointNameError)
+        expect(subject.errors[:required_parameters]).to be_an_instance_of(TwelvedataRuby::EndpointError)
       end
 
       it "when given a valid name and invalid query params" do

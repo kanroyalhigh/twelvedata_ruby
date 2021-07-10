@@ -4,114 +4,57 @@ require "webmock/rspec"
 require "httpx/adapters/webmock"
 
 describe TwelvedataRuby::Request do
-  describe "class constants" do
-    it "has `BASE_URL` constant and is equal to https://api.twelvedata.com" do
-      expect(described_class::BASE_URL).to eql("https://api.twelvedata.com")
-    end
-
-    it "has `DEFAULT_HTTP_VERB` constant which is equal to `:get`" do
-      expect(described_class::DEFAULT_HTTP_VERB).to eql(:get)
-    end
-
-    it "has `DEFAULT_FORMAT` constant which is equal to `:json`" do
-      expect(described_class::DEFAULT_FORMAT).to eql(:json)
-    end
-
-    it "has `VALID_FORMATS` array constant which contants `:json`, and `:csv` only" do
-      expect(described_class::VALID_FORMATS).to eql(%i[json csv])
-      expect(described_class::VALID_FORMATS.frozen?).to be true
-    end
-
-    it "has `FORMAT_MIME_TYPES` Hash constant for the `VALID_FORMATS`" do
-      expect(described_class::FORMAT_MIME_TYPES).to be_an_instance_of(Hash)
-      expect(described_class::FORMAT_MIME_TYPES.keys).to eql(described_class::VALID_FORMATS)
-      expect(described_class::FORMAT_MIME_TYPES.frozen?).to be true
-    end
-  end
-
-  describe "class methods" do
-    it "`VALID_FORMATS` Array constant will be returned in .valid_formats" do
-      expect(described_class.valid_formats).to eq(described_class::VALID_FORMATS)
-    end
-
-    it "return a Hash with `'Accept'` key in .accept_header" do
-      expect(described_class.accept_header).to have_key("Accept")
-      expect(described_class.accept_header["Accept"].split(",")).to eq(described_class::FORMAT_MIME_TYPES.values)
-    end
+  it "DEFAULT_HTTP_VERB class constant is equal to `:get`" do
+    expect(described_class::DEFAULT_HTTP_VERB).to eql(:get)
   end
 
   describe "instance" do
-    let(:endpoint) {
-      TwelvedataRuby::Endpoint.new(:price, symbol: "IBM", apikey: ENV.fetch("TWELVEDATA_API_KEY"))
-    }
-    let(:request) {
-      lambda {|options={}|
-        TwelvedataRuby::Request.new(
-          endpoint: options[:endpoint],
-          endpoint_name: options[:endpoint_name],
-          params: options[:params],
-          connect_timeout: options[:connect_timeout]
-        )
-      }
-    }
-    describe "#initialize" do
-      it "can instantiate with an endpoint instance object" do
-        endpoint_instance_request = request[{endpoint: endpoint}]
-        expect(endpoint_instance_request.endpoint).to eql(endpoint)
-        expect(endpoint_instance_request.path_name).to eql(endpoint.path_name)
-        expect(endpoint_instance_request.valid?).to eql(endpoint.valid?)
+    let(:endpoint_options) { [:quote, {symbol: "IBM"}] }
+    let(:fetched_response) { subject.fetch }
+    subject { described_class.new(endpoint_options[0], **endpoint_options[1])}
+    context "valid" do
+      let(:endpoint) { subject.endpoint }
+
+      it "expected to be valid" do
+        is_expected.to be_valid
       end
 
-      it "can instantiate with a new endpoint by passing an endpoint_name, and Hash params" do
-        new_endpoint_request = request[{endpoint_name: :quote}]
-        expect(new_endpoint_request.endpoint).not_to eq(endpoint)
-        expect(new_endpoint_request.path_name).to eq(:quote)
+      it "#params to be based from #endpoint.query_params" do
+        expect(subject.params).to eq({params: endpoint.query_params})
       end
 
-      it "can instantiate with a new value for `connect_timeout` to be 180" do
-        request_with_connect_timeout = request[{endpoin: :endpoin, connect_timeout: 180}]
-        expect(request_with_connect_timeout.connect_timeout).to eq(180)
-        expect(request_with_connect_timeout.timeout[:timeout][:connect_timeout]).to eq(180)
+      it "#http_verb to equal to `:get`" do
+        expect(subject.http_verb).to eq(:get)
       end
+
+      it "#relative_url to eqaul to #endpoint.name" do
+        expect(subject.relative_url).to eq(endpoint.name.to_s)
+      end
+
+      it "#to_a is a array instance" do
+        expect(subject.to_a).to eq([subject.http_verb, subject.relative_url, subject.params])
+      end
+
+      it "#to_h values is equal to #to_a" do
+        expect(subject.to_h.values).to eq(subject.to_a)
+      end
+
+      it "#build is #to_a alias" do
+        expect(subject.method(:build)).to eq(subject.method(:to_a))
+      end
+
+      it "#fetch to be an an instance of TwelvedataRuby::Response"
+
     end
 
-    describe "valid request" do
-      let(:valid_request) { request[{endpoint: endpoint}] }
-
-      it "returns a 3 element array in #to_a" do
-        expect(valid_request.to_a).to eq([valid_request.http_verb, valid_request.url, valid_request.params])
+    context "invalid" do
+      let(:endpoint_options) { [:quote, {}] }
+      it "expected to be NOT valid" do
+        is_expected.to_not be_valid
       end
 
-      it "returns the equivalent Hash in #to_h" do
-        expect(valid_request.to_h).to eq(
-          {
-            http_verb: valid_request.http_verb,
-            url: valid_request.url
-          }.merge(valid_request.params)
-        )
-      end
-
-      xit "fetches successfully the data from the api provider" do
-        # see https://honeyryderchuck.gitlab.io/httpx/wiki/Webmock-Adapter
-        # WebMock.enable!
-        # stub_request(valid_request.http_verb, valid_request.url)
-        # .with(valid_request.headers).to_return(status: 200, body: fixture..., headers...)
-        # resp = valid_request.fetch
-        # puts resp.inspect
-        expect(valid_request.fetch).to eq(valid_request.client.response)
-      end
-    end
-
-    describe "invalid request" do
-      let(:invalid_request) {
-        request[{endpoint_name: endpoint.path_name, params: {}}]
-      }
-      it "returns false in #valid?" do
-        expect(invalid_request.valid?).to eq(false)
-      end
-
-      it "will not fetch any data from the api and just returns nil" do
-        expect(invalid_request.fetch).to be_nil
+      it "#fetch to have errors" do
+        expect(fetched_response).to have_key(:errors)
       end
     end
   end
