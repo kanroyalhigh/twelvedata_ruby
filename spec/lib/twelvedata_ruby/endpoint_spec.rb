@@ -12,6 +12,17 @@ describe TwelvedataRuby::Endpoint do
         expect(described_class::DEFINITIONS.values).to all(include(:parameters, :response))
       end
     end
+
+    describe "DEFAULT_FORMAT and VALID_FORMATS" do
+      it "DEFAULT_FORMAT equals to `:json`" do
+        expect(described_class::DEFAULT_FORMAT).to eq(:json)
+      end
+
+      it "VALID_FORMATS equals to `[:json :csv]`" do
+        expect(described_class::VALID_FORMATS).to eq(%i[json csv])
+        expect(described_class::VALID_FORMATS).to be_frozen
+      end
+    end
   end
 
   describe "class methods" do
@@ -69,7 +80,7 @@ describe TwelvedataRuby::Endpoint do
 
     it "#name and #query_params should return the correct values" do
       expect(subject.name).to eq(endpoint_attribs[:name])
-      expect(subject.query_params).to eq(default_query_params)
+      expect(subject.query_params).to eq(default_query_params.merge(format: described_class::DEFAULT_FORMAT))
       expect(subject.query_params[:apikey]).to eq(TwelvedataRuby::Client.instance.apikey)
     end
 

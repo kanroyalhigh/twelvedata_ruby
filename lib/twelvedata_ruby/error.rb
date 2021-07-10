@@ -14,7 +14,7 @@ module TwelvedataRuby
 
     attr_reader :attrs
 
-    def initialize(args = {})
+    def initialize(args={})
       @attrs = args[:attrs] || {}
       super((args[:message] || DEFAULT_MSGS[Utils.demodulize(self.class)]) % @attrs)
     end
@@ -45,19 +45,20 @@ module TwelvedataRuby
       400 => "BadRequestResponseError",
       401 => "UnauthorizedResponseError",
       403 => "ForbiddenResponseError",
-      404 => "NotFoundResponseError",
+      404 => "PageNotFoundResponseError",
       414 => "ParameterTooLongResponseError",
       429 => "TooManyRequestsResponseError",
       500 => "InternalServerResponseError"
     }.freeze
 
-    attr_reader :json, :code
+    attr_reader :json, :code, :request
 
-    def initialize(attrs: nil, message: nil, json: {}, code: nil)
+    def initialize(json:, request:, attrs: nil, message: nil, code: nil)
       @json = json
       @code = code || @json[:code]
-      @attrs = @code
-      super(attrs: @code, message: "#{@json[:message] || message}. Error code is")
+      @attrs = attrs || {}
+      @request = request
+      super(attrs: @attrs, message: "#{@json[:message] || message}")
     end
   end
 
@@ -67,7 +68,7 @@ module TwelvedataRuby
 
   class ForbiddenResponseError < ResponseError; end
 
-  class NotFoundResponseError < ResponseError; end
+  class PageNotFoundResponseError < ResponseError; end
 
   class ParameterTooLongResponseError < ResponseError; end
 

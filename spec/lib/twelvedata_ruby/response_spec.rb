@@ -1,11 +1,8 @@
 # frozen_string_literal: true
 
-require "webmock/rspec"
-require "httpx/adapters/webmock"
-
 describe TwelvedataRuby::Response do
   describe "class constants" do
-    it "CSV_COL_SEP" do
+    it "CSV_COL_SEP is equal to `;`" do
       expect(described_class::CSV_COL_SEP).to eq(";")
     end
 

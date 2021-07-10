@@ -9,7 +9,7 @@ module TwelvedataRuby
     MIME_TYPES = {
       json: "application/json; charset=utf-8",
       csv: "text/csv"
-    }
+    }.freeze
 
     attr_reader :endpoint
 
@@ -32,7 +32,7 @@ module TwelvedataRuby
     end
 
     def filename
-      format == :csv ? ("#{query_params[:filename]}" || "12data_#{name}.csv") : nil
+      format == :csv ? (query_params[:filename] || "12data_#{name}.csv") : nil
     end
 
     def http_verb

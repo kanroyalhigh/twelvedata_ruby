@@ -12,28 +12,28 @@ module TwelvedataRuby
     }.freeze
 
     class << self
-      def resolve(http_response)
+      def resolve(http_response, request)
         if HTTP_STATUSES[:success].member?(http_response.status)
-          response = new(http_response: http_response)
+          response = new(http_response: http_response, request: request)
           response.error || response
         else
-          resolve_error(http_response)
+          resolve_error(http_response, request)
         end
       end
 
-      def resolve_error(http_response)
+      def resolve_error(http_response, request)
         error_attribs = if HTTP_STATUSES[:http_error].member?(http_response.status)
                           {message: http_response.body.to_s, code: http_response.status}
                         elsif http_response.respond_to?(:error) && http_response.error
                           {message: http_response.error.message, code: http_response.error.class.name}
                         end
-        TwelvedataRuby::ResponseError.new(json: error_attribs || {})
+        TwelvedataRuby::ResponseError.new(json: (error_attribs || {}), request: request)
       end
     end
 
-    attr_reader :http_response, :headers, :body
+    attr_reader :http_response, :headers, :body, :request
 
-    def initialize(http_response:, headers: nil, body: nil)
+    def initialize(http_response:, request:, headers: nil, body: nil)
       self.http_response = http_response
       self.headers = headers || http_response.headers
       self.body = body || http_response.body
@@ -76,7 +76,7 @@ module TwelvedataRuby
 
     def error
       klass_name = ResponseError::ERROR_CODES_MAP[parsed_body[:code]]
-      TwelvedataRuby.const_get(klass_name).new(json: parsed_body) if klass_name
+      TwelvedataRuby.const_get(klass_name).new(json: parsed_body, request: request) if klass_name
     end
 
     def json_dumper
@@ -117,6 +117,6 @@ module TwelvedataRuby
 
     private
 
-    attr_writer :http_response, :headers, :body
+    attr_writer :http_response, :headers, :body, :request
   end
 end

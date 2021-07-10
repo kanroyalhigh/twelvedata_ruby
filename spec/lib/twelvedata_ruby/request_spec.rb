@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "webmock/rspec"
-require "httpx/adapters/webmock"
 
 describe TwelvedataRuby::Request do
   it "DEFAULT_HTTP_VERB class constant is equal to `:get`" do
@@ -43,7 +41,12 @@ describe TwelvedataRuby::Request do
         expect(subject.method(:build)).to eq(subject.method(:to_a))
       end
 
-      it "#fetch to be an an instance of TwelvedataRuby::Response"
+      it "#fetch to be an an instance of TwelvedataRuby::Response" do
+        stub_http_fetch(subject)
+        response = subject.fetch
+        expect(response).to be_an_instance_of(TwelvedataRuby::Response)
+        expect(response.parsed_body[:symbol]).to eq(subject.query_params[:symbol])
+      end
 
     end
 
@@ -55,6 +58,20 @@ describe TwelvedataRuby::Request do
 
       it "#fetch to have errors" do
         expect(fetched_response).to have_key(:errors)
+      end
+
+      it "#fetch with error code: 400 BadRequestResponseError" do
+        endpoint_options[1].merge!({apikey: "apikey", symbol: "IBM"})
+        stub_http_fetch(subject, error_code: 400)
+        response = subject.fetch
+        expect(response).to be_an_instance_of(TwelvedataRuby::BadRequestResponseError)
+      end
+
+      it "#fetch with error code 401 UnauthorizedResponseError" do
+        endpoint_options[1].merge!({apikey: "apikey", symbol: "IBM"})
+        stub_http_fetch(subject, error_code: 401)
+        response = subject.fetch
+        expect(response).to be_an_instance_of(TwelvedataRuby::UnauthorizedResponseError)
       end
     end
   end
