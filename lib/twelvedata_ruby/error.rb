@@ -19,6 +19,7 @@ module TwelvedataRuby
       super((args[:message] || DEFAULT_MSGS[Utils.demodulize(self.class)]) % @attrs)
     end
   end
+
   class EndpointError < Error
     def initialize(**args)
       endpoint = args[:endpoint]
@@ -50,6 +51,10 @@ module TwelvedataRuby
       429 => "TooManyRequestsResponseError",
       500 => "InternalServerResponseError"
     }.freeze
+
+    def self.error_code_klass(code)
+      TwelvedataRuby::ResponseError::ERROR_CODES_MAP[code]
+    end
 
     attr_reader :json, :code, :request
 

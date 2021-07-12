@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
-
 describe TwelvedataRuby::Request do
   it "DEFAULT_HTTP_VERB class constant is equal to `:get`" do
     expect(described_class::DEFAULT_HTTP_VERB).to eql(:get)
   end
 
   describe "instance" do
-    let(:endpoint_options) { [:quote, {symbol: "IBM"}] }
+    let(:endpoint_options) { {name: :time_series, query_params: {symbol: "IBM", interval: "1day"}} }
+    subject { described_class.new(endpoint_options[:name], **endpoint_options[:query_params]) }
     let(:fetched_response) { subject.fetch }
-    subject { described_class.new(endpoint_options[0], **endpoint_options[1])}
     context "valid" do
       let(:endpoint) { subject.endpoint }
 
@@ -43,35 +42,29 @@ describe TwelvedataRuby::Request do
 
       it "#fetch to be an an instance of TwelvedataRuby::Response" do
         stub_http_fetch(subject)
-        response = subject.fetch
-        expect(response).to be_an_instance_of(TwelvedataRuby::Response)
-        expect(response.parsed_body[:symbol]).to eq(subject.query_params[:symbol])
+        expect(fetched_response).to be_an_instance_of(TwelvedataRuby::Response)
+        expect(fetched_response.parsed_body.keys).to eq(%i[meta values status])
       end
-
     end
 
     context "invalid" do
-      let(:endpoint_options) { [:quote, {}] }
-      it "expected to be NOT valid" do
+      let(:endpoint_options) { {name: :time_series, query_params: {apikey: "apikey", symbol: "IBM"}} }
+      it "is expected to be NOT valid and #fetch returns a hash errors instance" do
         is_expected.to_not be_valid
-      end
-
-      it "#fetch to have errors" do
-        expect(fetched_response).to have_key(:errors)
+        expect(fetched_response[:errors][:required_parameters])
+          .to be_an_instance_of(TwelvedataRuby::EndpointRequiredParametersError)
       end
 
       it "#fetch with error code: 400 BadRequestResponseError" do
-        endpoint_options[1].merge!({apikey: "apikey", symbol: "IBM"})
+        endpoint_options[:query_params].merge!(interval: "wrong-interval")
         stub_http_fetch(subject, error_code: 400)
-        response = subject.fetch
-        expect(response).to be_an_instance_of(TwelvedataRuby::BadRequestResponseError)
+        expect(fetched_response).to be_an_instance_of(TwelvedataRuby::BadRequestResponseError)
       end
 
       it "#fetch with error code 401 UnauthorizedResponseError" do
-        endpoint_options[1].merge!({apikey: "apikey", symbol: "IBM"})
+        endpoint_options[:query_params].merge!(apikey: "wrong-apikey", interval: "1day")
         stub_http_fetch(subject, error_code: 401)
-        response = subject.fetch
-        expect(response).to be_an_instance_of(TwelvedataRuby::UnauthorizedResponseError)
+        expect(fetched_response).to be_an_instance_of(TwelvedataRuby::UnauthorizedResponseError)
       end
     end
   end

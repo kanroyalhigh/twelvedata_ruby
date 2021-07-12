@@ -2,27 +2,46 @@
 
 module TwelvedataRuby
   module StubHttp
-    def mock_request(request)
-      stub_http_request(request.http_verb, request.full_url)
+    MIME_TYPES = {
+      json: "application/json; charset=utf-8",
+      csv: "text/csv"
+    }.freeze
+
+    def mock_request(request, **opts)
+      stub_http_request(request.http_verb, opts[:full_url] || request.full_url)
     end
 
     def stub_http_fetch(request, **opts)
-      # (a[0].downcase + a[1,a.length-1]).gsub(/([A-Z])/) { |s| '_' + s.downcase }
-      err_klass = TwelvedataRuby::ResponseError::ERROR_CODES_MAP[opts[:error_code]]
-      fixture_name = if err_klass
-        (err_klass[0].downcase + err_klass[1, err_klass.length-1]).gsub(/([A-Z])/) { |s| '_' + s.downcase }
-      else
-        request.name
-      end
-      fixture_ext = request.format
-      mock_request(request)
-        .and_return(
-          status: opts[:http_status] || 200,
-          body: load_fixture(fixture_name, fixture_ext),
-          headers: {
-            "Content-Type" => request.format_mime_type
-          }.merge(request.filename ? {"Content-Disposition" => "attachment; filename=\"#{request.filename}\""} : {})
+      mock_request(request, full_url: opts[:full_url]).and_return(
+        response_options(
+          request,
+          http_status: opts[:http_status] || 200,
+          fixture_name: error_klass_fixture(opts[:error_code]) || request.name,
+          content_type_format: opts[:format] || request.query_params[:format]
         )
+      )
+    end
+
+    private
+
+    def error_klass_fixture(error_code)
+      klass_name = TwelvedataRuby::ResponseError.error_code_klass(error_code)
+      (klass_name[0].downcase + klass_name[1, klass_name.length - 1])
+        .gsub(/([A-Z])/) {|s| "_#{s.downcase}" } if klass_name
+    end
+
+    def response_options(req, http_status:, fixture_name:, content_type_format:)
+      options = {
+        status: http_status,
+        body: load_fixture(fixture_name, content_type_format),
+        headers: {"Content-Type" => MIME_TYPES[content_type_format]}
+      }
+      if content_type_format == :csv
+        options[:headers].merge!(
+          "Content-Disposition" => "attachment; filename=\"#{req.query_params[:filename] || "12data_#{req.name}.csv"}\""
+        )
+      end
+      options
     end
   end
 end

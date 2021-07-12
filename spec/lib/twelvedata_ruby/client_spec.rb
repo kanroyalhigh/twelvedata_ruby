@@ -110,7 +110,6 @@ describe TwelvedataRuby::Client do
         expect(fetched_request[:errors][:parameters_keys])
           .to be_an_instance_of(TwelvedataRuby::EndpointParametersKeysError)
       end
-
     end
   end
 end

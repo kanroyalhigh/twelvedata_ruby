@@ -6,10 +6,6 @@ module TwelvedataRuby
     extend Forwardable
 
     DEFAULT_HTTP_VERB = :get
-    MIME_TYPES = {
-      json: "application/json; charset=utf-8",
-      csv: "text/csv"
-    }.freeze
 
     attr_reader :endpoint
 
@@ -18,21 +14,12 @@ module TwelvedataRuby
     end
     def_delegators :endpoint, :name, :valid?, :query_params, :errors
 
-
     def fetch
       Client.instance.fetch(self)
     end
 
-    def format
-      query_params[:format]
-    end
-
     def format_mime_type
-      MIME_TYPES[format]
-    end
-
-    def filename
-      format == :csv ? (query_params[:filename] || "12data_#{name}.csv") : nil
+      MIME_TYPES[query_params[:format]]
     end
 
     def http_verb

@@ -7,7 +7,8 @@ Gem::Specification.new do |spec|
   spec.version = TwelvedataRuby::VERSION
   spec.authors = ["Kendo Camajalan, KCD"]
   spec.email = ["ken.d.camajalan@pm.me"]
-  spec.summary = "A Ruby client library that provides helping hands in accessing Twelve Data API's stock, forex, crypto, and other financial data"
+  spec.summary = "A Ruby client library that provides helping hands in accessing Twelve Data API's stock, \
+                 forex, crypto, and other financial data"
   spec.description = "A Ruby gem for accessing Twelve Data's API."
   spec.homepage = "https://github.com/kanroyalhigh/twelvedata_ruby"
   spec.license = "MIT"

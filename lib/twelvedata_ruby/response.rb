@@ -75,7 +75,7 @@ module TwelvedataRuby
     end
 
     def error
-      klass_name = ResponseError::ERROR_CODES_MAP[parsed_body[:code]]
+      klass_name = ResponseError.error_code_klass(parsed_body[:code])
       TwelvedataRuby.const_get(klass_name).new(json: parsed_body, request: request) if klass_name
     end
 

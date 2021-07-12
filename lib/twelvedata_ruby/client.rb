@@ -52,6 +52,7 @@ module TwelvedataRuby
 
     def fetch(request)
       return nil unless request
+
       request.valid? ? Response.resolve(self.class.request(request), request) : {errors: request.errors}
     end
 
