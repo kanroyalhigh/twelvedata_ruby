@@ -2,14 +2,18 @@
 
 describe TwelvedataRuby::Response do
   let(:endpoint_options) { {name: :time_series, query_params: {symbol: "IBM", interval: "1day"}} }
-  let(:request) { {request: TwelvedataRuby::Request.new(endpoint_options[:name], **endpoint_options[:query_params])} }
-  let(:http_response) do
-    req = request[:stubbed] || request[:request]
-    TwelvedataRuby::Client.request(req, {origin: req.full_url})
-  end
-  subject { described_class.new(http_response: http_response, request: request) }
 
-  describe "class constants" do
+  let(:request) do |example|
+    (example.metadata[:stub_http_opts] || {})[:stub_request] ? stub_request : TwelvedataRuby::Request.new(
+      endpoint_options[:name], **endpoint_options[:query_params]
+    )
+  end
+
+  let(:http_response) { TwelvedataRuby::Client.request(request, {origin: request.full_url}) }
+  subject { described_class.new(http_response: http_response, request: request) }
+  let(:response_error) { subject.error }
+
+  describe "class constants and .http_status_codes class method" do
     it "CSV_COL_SEP is equal to `;`" do
       expect(described_class::CSV_COL_SEP).to eq(";")
     end
@@ -19,7 +23,7 @@ describe TwelvedataRuby::Response do
       expect(described_class::HTTP_STATUSES).to be_frozen
       expect(described_class::HTTP_STATUSES.keys).to eq(%i[http_error success])
       expect(described_class::HTTP_STATUSES[:success]).to eq(200..299)
-      expect(described_class::HTTP_STATUSES[:http_error]).to eq(400..1_000)
+      expect(described_class::HTTP_STATUSES[:http_error]).to eq(400..600)
     end
 
     it "CONTENT_TYPE_HANDLERS" do
@@ -28,53 +32,59 @@ describe TwelvedataRuby::Response do
       expect(described_class::CONTENT_TYPE_HANDLERS.keys).to eq(%i[json csv plain])
       expect(described_class::CONTENT_TYPE_HANDLERS.values).to all(include(:parser, :dumper))
     end
+
+    it ".http_status_codes returns a flat array of all the HTTP_STATUSES values" do
+      expect(described_class.http_status_codes).to eq(described_class::HTTP_STATUSES.values.map(&:to_a).flatten)
+    end
   end
 
   context "mock http request" do
     before(:each) do |example|
       endpoint_options[:query_params].merge!(example.metadata[:query_params]) if example.metadata[:query_params]
-      expect(request[:request]).to be_valid
-      stub_http_fetch(request[:request])
+      stub_http_opts = example.metadata[:stub_http_opts] || {}
+      expect(request).to be_valid
+      stub_http_fetch(request, **(stub_http_opts[:opts] || {}))
     end
     describe "class methods" do
       describe ".resolve" do
-        subject { described_class.resolve(http_response, request[:request]) }
+        subject { described_class.resolve(http_response, request) }
 
-        it "can return a #{described_class} instance on a successfull request fetch" do
+        it "returns a #{described_class} instance on a successfull request fetch" do
           is_expected.to be_an_instance_of(described_class)
         end
 
-        it "can return an instance of kind ResponseError with an API error " do
-          stub_http_fetch(request[:request], error_code: 401)
-          is_expected.to be_an_instance_of(TwelvedataRuby::UnauthorizedResponseError)
-        end
-
-        it "can return an instance of kind ResponseError with the response error from the API web server" do
-          invalid_page = "invalid-page"
-          stubbed_req = OpenStruct.new(
-            build: [:get, invalid_page],
-            full_url: "#{TwelvedataRuby::Client.origin[:origin]}/#{invalid_page}"
-          )
-          request.merge!(stubbed: stubbed_req)
-          stub_http_fetch(
-            request[:request],
-            http_status: 404,
-            error_code: 404,
-            format: :txt,
-            full_url: stubbed_req.full_url
-          )
-
-          is_expected.to be_an_instance_of(TwelvedataRuby::ResponseError)
-          expect(subject.code).to eq(404)
-        end
+        it "returns an instance of kind ResponseError with the response error from the API web server",
+           {
+             stub_http_opts: {
+               opts: {
+                 http_status: 404,
+                 error_klass_name: "PageNotFoundResponseError",
+                 format: :plain
+               },
+               stub_request: true
+             }
+           } do
+             expect(response_error).to be_an_instance_of(TwelvedataRuby::PageNotFoundResponseError)
+             expect(subject.status_code).to eq(404)
+             expect(subject.http_status_code).to eq(404)
+             expect(subject.content_type).to eq(:plain)
+           end
       end
 
       describe ".resolve_error" do
-        let(:error) { HTTPX::NativeResolveError.new(http_response, http_response.uri.host) }
-        subject { described_class.resolve_error(OpenStruct.new(error: error), request[:request]) }
-        it "can resolve error from the native http client library" do
+        let(:error) do |example|
+          example.metadata[:stub_error] ? HTTPX::NativeResolveError.new(http_response, http_response.uri.host) : nil
+        end
+        subject { described_class.resolve(OpenStruct.new(error: error, status: error.class.name), request) }
+
+        it "can resolve/returns an instance of kind of an error class from http client library", stub_error: true do
           is_expected.to be_an_instance_of(TwelvedataRuby::ResponseError)
           expect(subject.code).to eq(error.class.name)
+        end
+
+        it "resolves an unknown http response error" do
+          expect(error).to be_nil
+          is_expected.to be_an_instance_of(TwelvedataRuby::ResponseError)
         end
       end
     end
@@ -91,6 +101,14 @@ describe TwelvedataRuby::Response do
             .to change { parsed_file_content.empty? }.from(true).to(false)
         end
       end
+
+      it "#error returns a kind of TwelvedataRuby::ResponseError instance with error details from the API",
+         {stub_http_opts: {opts: {error_code: 404}}} do
+           expect(response_error).to be_an_instance_of(TwelvedataRuby::NotFoundResponseError)
+           expect(subject.status_code).to eq(404)
+           expect(subject.content_type).to eq(:json)
+           expect(subject.http_status_code).to eq(200)
+         end
 
       context ":json content type format" do
         let(:parser_klass) { JSON }
@@ -112,7 +130,7 @@ describe TwelvedataRuby::Response do
         end
       end
 
-      context ":csv", query_params: {format: :csv} do
+      context ":csv content type format", query_params: {format: :csv} do
         let(:parser_klass) { CSV }
         it "response body processing will be be based on :csv" do
           expect(subject.content_type).to eq(:csv)
@@ -125,7 +143,7 @@ describe TwelvedataRuby::Response do
         end
 
         it "headers' content-deposition default is `12data_{endpoint_name}.csv` if no `:filename` in query params" do
-          expect(subject.attachment_filename).to eq("12data_#{request[:request].name}.csv")
+          expect(subject.attachment_filename).to eq("12data_#{request.name}.csv")
         end
 
         it "headers' content-deposition default can be set by the `:filename` in query params",

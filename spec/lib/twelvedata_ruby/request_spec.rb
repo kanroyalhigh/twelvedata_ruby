@@ -48,6 +48,7 @@ describe TwelvedataRuby::Request do
     end
 
     context "invalid" do
+      let(:response_error) { fetched_response.error }
       let(:endpoint_options) { {name: :time_series, query_params: {apikey: "apikey", symbol: "IBM"}} }
       it "is expected to be NOT valid and #fetch returns a hash errors instance" do
         is_expected.to_not be_valid
@@ -58,13 +59,16 @@ describe TwelvedataRuby::Request do
       it "#fetch with error code: 400 BadRequestResponseError" do
         endpoint_options[:query_params].merge!(interval: "wrong-interval")
         stub_http_fetch(subject, error_code: 400)
-        expect(fetched_response).to be_an_instance_of(TwelvedataRuby::BadRequestResponseError)
+        expect(response_error).to be_an_instance_of(TwelvedataRuby::BadRequestResponseError)
+        expect(fetched_response.http_status_code).to eql(200)
       end
 
       it "#fetch with error code 401 UnauthorizedResponseError" do
         endpoint_options[:query_params].merge!(apikey: "wrong-apikey", interval: "1day")
         stub_http_fetch(subject, error_code: 401)
-        expect(fetched_response).to be_an_instance_of(TwelvedataRuby::UnauthorizedResponseError)
+        expect(response_error).to be_an_instance_of(TwelvedataRuby::UnauthorizedResponseError)
+        expect(fetched_response.status_code).to eql(401)
+        expect(fetched_response.http_status_code).to eql(200)
       end
     end
   end

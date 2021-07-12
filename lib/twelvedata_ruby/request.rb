@@ -18,10 +18,6 @@ module TwelvedataRuby
       Client.instance.fetch(self)
     end
 
-    def format_mime_type
-      MIME_TYPES[query_params[:format]]
-    end
-
     def http_verb
       return_nil_unless_valid { endpoint.definition[:http_verb] || DEFAULT_HTTP_VERB }
     end

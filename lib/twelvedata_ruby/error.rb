@@ -42,24 +42,29 @@ module TwelvedataRuby
   class EndpointRequiredParametersError < EndpointError; end
 
   class ResponseError < Error
-    ERROR_CODES_MAP = {
+    API_ERROR_CODES_MAP = {
       400 => "BadRequestResponseError",
       401 => "UnauthorizedResponseError",
       403 => "ForbiddenResponseError",
-      404 => "PageNotFoundResponseError",
+      404 => "NotFoundResponseError",
       414 => "ParameterTooLongResponseError",
       429 => "TooManyRequestsResponseError",
       500 => "InternalServerResponseError"
     }.freeze
+    HTTP_ERROR_CODES_MAP = {
+      404 => "PageNotFoundResponseError",
+    }.freeze
 
-    def self.error_code_klass(code)
-      TwelvedataRuby::ResponseError::ERROR_CODES_MAP[code]
+    def self.error_code_klass(code, error_type=:api)
+      error_type = :api unless %i[api http].member?(error_type)
+
+      TwelvedataRuby::ResponseError.const_get("#{error_type.upcase}_ERROR_CODES_MAP")[code]
     end
 
     attr_reader :json, :code, :request
 
     def initialize(json:, request:, attrs: nil, message: nil, code: nil)
-      @json = json
+      @json = json.is_a?(Hash) ? json : {}
       @code = code || @json[:code]
       @attrs = attrs || {}
       @request = request
@@ -72,6 +77,8 @@ module TwelvedataRuby
   class UnauthorizedResponseError < ResponseError; end
 
   class ForbiddenResponseError < ResponseError; end
+
+  class NotFoundResponseError < ResponseError; end
 
   class PageNotFoundResponseError < ResponseError; end
 

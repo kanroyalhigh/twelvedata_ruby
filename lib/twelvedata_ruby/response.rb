@@ -4,30 +4,33 @@ require "csv"
 module TwelvedataRuby
   class Response
     CSV_COL_SEP = ";"
-    HTTP_STATUSES = {http_error: (400..1_000), success: (200..299)}.freeze
+    HTTP_STATUSES = {http_error: (400..600), success: (200..299)}.freeze
     CONTENT_TYPE_HANDLERS = {
       json: {parser: :json_parser, dumper: :json_dumper},
       csv: {parser: :csv_parser, dumper: :csv_dumper},
-      plain: {parser: :plain_parser, dumper: :plain_dumper}
+      plain: {parser: :plain_parser, dumper: :to_s}
     }.freeze
 
     class << self
       def resolve(http_response, request)
-        if HTTP_STATUSES[:success].member?(http_response.status)
-          response = new(http_response: http_response, request: request)
-          response.error || response
+        if http_status_codes.member?(http_response.status)
+          new(http_response: http_response, request: request)
         else
           resolve_error(http_response, request)
         end
       end
 
       def resolve_error(http_response, request)
-        error_attribs = if HTTP_STATUSES[:http_error].member?(http_response.status)
-                          {message: http_response.body.to_s, code: http_response.status}
-                        elsif http_response.respond_to?(:error) && http_response.error
+        error_attribs = if http_response.respond_to?(:error) && http_response.error
                           {message: http_response.error.message, code: http_response.error.class.name}
+                        else
+                          {message: http_response.body.to_s, code: http_response.status}
                         end
         TwelvedataRuby::ResponseError.new(json: (error_attribs || {}), request: request)
+      end
+
+      def http_status_codes
+        @http_status_codes ||= HTTP_STATUSES.values.map(&:to_a).flatten
       end
     end
 
@@ -54,16 +57,12 @@ module TwelvedataRuby
     end
 
     def csv_parser
-      parsed_chunk = nil
+      chunk_parsed = nil
       opts = {col_sep: CSV_COL_SEP}
-      body.each do |chunk|
-        if parsed_chunk
-          parsed_chunk.push(CSV.parse(chunk, **opts))
-        else
-          parsed_chunk = CSV.parse(chunk, **opts.merge(headers: true))
-        end
+      body.each do |chk|
+        chunk_parsed = chunk_parsed&.send(:push, CSV.parse(chk, **opts)) || CSV.parse(chk, **opts.merge(headers: true))
       end
-      parsed_chunk
+      chunk_parsed
     end
 
     def csv_dumper
@@ -71,12 +70,19 @@ module TwelvedataRuby
     end
 
     def dumped_parsed_body
-      @dumped_parsed_body ||= send(parsed_body_dumper)
+      @dumped_parsed_body ||=
+        parsed_body.respond_to?(parsed_body_dumper) ? parsed_body.send(parsed_body_dumper) : send(parsed_body_dumper)
     end
 
     def error
-      klass_name = ResponseError.error_code_klass(parsed_body[:code])
-      TwelvedataRuby.const_get(klass_name).new(json: parsed_body, request: request) if klass_name
+      klass_name = ResponseError.error_code_klass(status_code, success_http_status? ? :api : :http)
+      return unless klass_name
+      TwelvedataRuby.const_get(klass_name)
+        .new(json: parsed_body, request: request, code: status_code, message: parsed_body)
+    end
+
+    def http_status_code
+      http_response&.status
     end
 
     def json_dumper
@@ -95,12 +101,16 @@ module TwelvedataRuby
       CONTENT_TYPE_HANDLERS[content_type][:dumper]
     end
 
-    def plain_dumper
-      parsed_body.to_s
-    end
-
     def plain_parser
       body.to_s
+    end
+
+    def status_code
+      @status_code ||= parsed_body.is_a?(Hash) ? parsed_body[:code] : http_status_code
+    end
+
+    def success_http_status?
+      @success_http_status ||= HTTP_STATUSES[:success].member?(http_status_code) || false
     end
 
     def to_disk_file(file_fullpath=attachment_filename)
