@@ -448,6 +448,54 @@
         <li class="public ">
   <span class="summary_signature">
     
+      <a href="#apikey_env_var_name-instance_method" title="#apikey_env_var_name (instance method)">#<strong>apikey_env_var_name</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>The name of the ENVIRONMENT variable that may hold the value of the Twelve Data API key # @return [String] the ENV variable that will be used to fetch from ENV the value of the API  key.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#apikey_env_var_name=-instance_method" title="#apikey_env_var_name= (instance method)">#<strong>apikey_env_var_name=</strong>(apikey_env_var_name)  &#x21d2; String </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>A setter helper method to configure the ENV variable name of the API key.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
       <a href="#connect_timeout-instance_method" title="#connect_timeout (instance method)">#<strong>connect_timeout</strong>  &#x21d2; Object </a>
     
 
@@ -599,7 +647,7 @@
   
     <li>
       
-        <span class='name'>+endpoint_name+</span>
+        <span class='name'>endpoint_name</span>
       
       
         <span class='type'>(<tt>String</tt>)</span>
@@ -615,7 +663,7 @@
   
     <li>
       
-        <span class='name'>+endpoint_params+</span>
+        <span class='name'>endpoint_params</span>
       
       
         <span class='type'>(<tt>Hash</tt>)</span>
@@ -646,12 +694,12 @@
       <pre class="lines">
 
 
-100
-101
-102</pre>
+114
+115
+116</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/twelvedata_ruby/client.rb', line 100</span>
+      <pre class="code"><span class="info file"># File 'lib/twelvedata_ruby/client.rb', line 114</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_method_missing'>method_missing</span><span class='lparen'>(</span><span class='id identifier rubyid_endpoint_name'>endpoint_name</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_endpoint_params'>endpoint_params</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid__block'>_block</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_try_fetch'>try_fetch</span><span class='lparen'>(</span><span class='id identifier rubyid_endpoint_name'>endpoint_name</span><span class='comma'>,</span> <span class='id identifier rubyid_endpoint_params'>endpoint_params</span><span class='rparen'>)</span> <span class='op'>||</span> <span class='kw'>super</span>
@@ -938,7 +986,7 @@
       <pre class="code"><span class="info file"># File 'lib/twelvedata_ruby/client.rb', line 48</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_apikey'>apikey</span>
-  <span class='const'><span class='object_link'><a href="Utils.html" title="TwelvedataRuby::Utils (module)">Utils</a></span></span><span class='period'>.</span><span class='id identifier rubyid_empty_to_nil'><span class='object_link'><a href="Utils.html#empty_to_nil-class_method" title="TwelvedataRuby::Utils.empty_to_nil (method)">empty_to_nil</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:apikey</span><span class='rbracket'>]</span><span class='rparen'>)</span> <span class='op'>||</span> <span class='const'>ENV</span><span class='lbracket'>[</span><span class='const'><span class='object_link'><a href="#APIKEY_ENV_NAME-constant" title="TwelvedataRuby::Client::APIKEY_ENV_NAME (constant)">APIKEY_ENV_NAME</a></span></span><span class='rbracket'>]</span>
+  <span class='const'><span class='object_link'><a href="Utils.html" title="TwelvedataRuby::Utils (module)">Utils</a></span></span><span class='period'>.</span><span class='id identifier rubyid_empty_to_nil'><span class='object_link'><a href="Utils.html#empty_to_nil-class_method" title="TwelvedataRuby::Utils.empty_to_nil (method)">empty_to_nil</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:apikey</span><span class='rbracket'>]</span><span class='rparen'>)</span> <span class='op'>||</span> <span class='const'>ENV</span><span class='lbracket'>[</span><span class='id identifier rubyid_apikey_env_var_name'>apikey_env_var_name</span><span class='rbracket'>]</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -968,7 +1016,7 @@
   
     <li>
       
-        <span class='name'>+apikey+</span>
+        <span class='name'>apikey</span>
       
       
         <span class='type'>(<tt>String</tt>)</span>
@@ -1013,6 +1061,128 @@
 
 <span class='kw'>def</span> <span class='id identifier rubyid_apikey='>apikey=</span><span class='lparen'>(</span><span class='id identifier rubyid_apikey'>apikey</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:apikey</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='id identifier rubyid_apikey'>apikey</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="apikey_env_var_name-instance_method">
+  
+    #<strong>apikey_env_var_name</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>The name of the ENVIRONMENT variable that may hold the value of the Twelve Data API key # @return [String] the ENV variable that will be used to fetch from ENV the value of the API  key</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+69
+70
+71</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/twelvedata_ruby/client.rb', line 69</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_apikey_env_var_name'>apikey_env_var_name</span>
+  <span class='lparen'>(</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:apikey_env_var_name</span><span class='rbracket'>]</span> <span class='op'>||</span> <span class='const'><span class='object_link'><a href="#APIKEY_ENV_NAME-constant" title="TwelvedataRuby::Client::APIKEY_ENV_NAME (constant)">APIKEY_ENV_NAME</a></span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_upcase'>upcase</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="apikey_env_var_name=-instance_method">
+  
+    #<strong>apikey_env_var_name=</strong>(apikey_env_var_name)  &#x21d2; <tt>String</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>A setter helper method to configure the ENV variable name of the API key</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>apikey_env_var_name</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>the ENV variable name</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+  <p class="tag_title">See Also:</p>
+  <ul class="see">
+    
+      <li><span class='object_link'><a href="#apikey_env_var_name-instance_method" title="TwelvedataRuby::Client#apikey_env_var_name (method)">#apikey_env_var_name</a></span></li>
+    
+  </ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+77
+78
+79</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/twelvedata_ruby/client.rb', line 77</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_apikey_env_var_name='>apikey_env_var_name=</span><span class='lparen'>(</span><span class='id identifier rubyid_apikey_env_var_name'>apikey_env_var_name</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:apikey_env_var_name</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='id identifier rubyid_apikey_env_var_name'>apikey_env_var_name</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -1100,7 +1270,7 @@
   
     <li>
       
-        <span class='name'>+request+</span>
+        <span class='name'>request</span>
       
       
         <span class='type'>(<tt><span class='object_link'><a href="Request.html" title="TwelvedataRuby::Request (class)">Request</a></span></tt>)</span>
@@ -1183,14 +1353,14 @@
       <pre class="lines">
 
 
-83
-84
-85
-86
-87</pre>
+97
+98
+99
+100
+101</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/twelvedata_ruby/client.rb', line 83</span>
+      <pre class="code"><span class="info file"># File 'lib/twelvedata_ruby/client.rb', line 97</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_fetch'>fetch</span><span class='lparen'>(</span><span class='id identifier rubyid_request'>request</span><span class='rparen'>)</span>
   <span class='kw'>return</span> <span class='kw'>nil</span> <span class='kw'>unless</span> <span class='id identifier rubyid_request'>request</span>
@@ -1239,14 +1409,14 @@
       <pre class="lines">
 
 
-108
-109
-110
-111
-112</pre>
+122
+123
+124
+125
+126</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/twelvedata_ruby/client.rb', line 108</span>
+      <pre class="code"><span class="info file"># File 'lib/twelvedata_ruby/client.rb', line 122</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_respond_to_missing?'>respond_to_missing?</span><span class='lparen'>(</span><span class='id identifier rubyid_endpoint_name'>endpoint_name</span><span class='comma'>,</span> <span class='id identifier rubyid__include_all'>_include_all</span><span class='op'>=</span><span class='kw'>false</span><span class='rparen'>)</span>
   <span class='const'><span class='object_link'><a href="Utils.html" title="TwelvedataRuby::Utils (module)">Utils</a></span></span><span class='period'>.</span><span class='id identifier rubyid_return_nil_unless_true'><span class='object_link'><a href="Utils.html#return_nil_unless_true-class_method" title="TwelvedataRuby::Utils.return_nil_unless_true (method)">return_nil_unless_true</a></span></span><span class='lparen'>(</span><span class='const'><span class='object_link'><a href="Endpoint.html" title="TwelvedataRuby::Endpoint (class)">Endpoint</a></span></span><span class='period'>.</span><span class='id identifier rubyid_valid_name?'><span class='object_link'><a href="Endpoint.html#valid_name%3F-class_method" title="TwelvedataRuby::Endpoint.valid_name? (method)">valid_name?</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_endpoint_name'>endpoint_name</span><span class='rparen'>)</span><span class='rparen'>)</span> <span class='lbrace'>{</span>
@@ -1263,7 +1433,7 @@
 </div>
 
       <div id="footer">
-  Generated on Mon Jul 12 20:27:49 2021 by
+  Generated on Tue Jul 13 08:56:52 2021 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.26 (ruby-3.0.1).
 </div>
