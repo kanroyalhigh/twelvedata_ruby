@@ -46,7 +46,7 @@ module TwelvedataRuby
     # @return [String] apikey value from the instance options Hash object
     #   but if nill use the value from +ENV[APIKEY_ENV_NAME]+
     def apikey
-      Utils.empty_to_nil(options[:apikey]) || ENV[APIKEY_ENV_NAME]
+      Utils.empty_to_nil(options[:apikey]) || ENV[apikey_env_var_name]
     end
 
     # The writer method that can be used to pass manually the value of the +apikey+
@@ -62,6 +62,20 @@ module TwelvedataRuby
 
     def connect_timeout=(connect_timeout)
       parse_connect_timeout(connect_timeout)
+    end
+
+    # The name of the ENVIRONMENT variable that may hold the value of the Twelve Data API key
+    # # @return [String] the ENV variable that will be used to fetch from ENV the value of the API  key
+    def apikey_env_var_name
+      (options[:apikey_env_var_name] || APIKEY_ENV_NAME).upcase
+    end
+
+    # A setter helper method to configure the ENV variable name of the API key
+    # @param [String] +apikey_env_var_name+
+    # @return [String] the ENV variable name
+    # @see #apikey_env_var_name
+    def apikey_env_var_name=(apikey_env_var_name)
+      options[:apikey_env_var_name] = apikey_env_var_name
     end
 
     # The actual API fetch that transport the built request object.

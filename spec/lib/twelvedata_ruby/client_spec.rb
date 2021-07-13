@@ -63,6 +63,11 @@ describe TwelvedataRuby::Client do
       expect(subject.connect_timeout).to eq(new_connect_timeout)
     end
 
+    it "`#apikey_env_var_name=` method that sets the ENV var name that will be used to fetch from the API key value" do
+      expect { subject.apikey_env_var_name = "new_env_var_name" }
+        .to change(subject, :apikey_env_var_name).from(described_class::APIKEY_ENV_NAME).to("new_env_var_name".upcase)
+    end
+
     context "valid" do
       let(:valid_endpoint_name) { endpoint_name }
       let(:valid_query_params) { {symbol: "IBM"} }
