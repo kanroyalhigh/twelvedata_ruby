@@ -50,7 +50,7 @@ module TwelvedataRuby
     end
 
     # The writer method that can be used to pass manually the value of the +apikey+
-    # @param [String] +apikey+
+    # @param [String] apikey
     # @return [String] +apikey+ value
     def apikey=(apikey)
       options[:apikey] = apikey
@@ -71,7 +71,7 @@ module TwelvedataRuby
     end
 
     # A setter helper method to configure the ENV variable name of the API key
-    # @param [String] +apikey_env_var_name+
+    # @param [String] apikey_env_var_name
     # @return [String] the ENV variable name
     # @see #apikey_env_var_name
     def apikey_env_var_name=(apikey_env_var_name)
@@ -84,7 +84,7 @@ module TwelvedataRuby
     # will be resolved which may or may not contain a kind of +ResponseError+ instance.
     # @see Response.resolve for more details
 
-    # @param [Request] +request+ built API request object that holds the endpoint payload
+    # @param [Request] request built API request object that holds the endpoint payload
     #
     # @return [NilClass] +nil+ if @param +request+ is not truthy
     # @return [Hash] :errors if the request is not valid will hold the  endpoint errors details
@@ -101,8 +101,8 @@ module TwelvedataRuby
     end
 
     # The entry point in dynamically defining instance methods based on the called the valid endpoint names.
-    # @param [String] +endpoint_name+ valid API endpoint name to fetch
-    # @param [Hash] +endpoint_params+ the optional/required valid query params of the API endpoint.
+    # @param [String] endpoint_name valid API endpoint name to fetch
+    # @param [Hash] endpoint_params the optional/required valid query params of the API endpoint.
     #   If +:apikey+ key-value pair is present, the pair will override the +#apikey+ of singleton client instance
     #   If +:format+ key-value pair is present and is a valid parameter key and value can only be +:csv+ or +:json+
     #   If +:filename+ key-value is present and +:format+ is +:csv+, then this is will be added to the payload too.

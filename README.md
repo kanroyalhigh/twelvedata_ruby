@@ -1,7 +1,7 @@
 # TwelvedataRuby
 
 
-TwelvedataRuby is a Ruby library that provides convenient ways to access the Twelve Data API to get stock, forex, crypto, and other financial data. First, a free API Key is required and it might be requested [here](https://twelvedata.com/pricing). Visit their [API's full documentation](https://twelvedata.com/doc)
+TwelvedataRuby is a Ruby library that exposes some convenient ways to access Twelve Data API to get information on stock, forex, crypto, and other financial market data. In order to do so, a free API key is required which can be easily requested [here](https://twelvedata.com/pricing). Visit their [API's full documentation](https://twelvedata.com/doc)
 
 ## Installation
 
@@ -21,67 +21,91 @@ Or install it yourself as:
 
 ## Usage
 
-First, you need to obtain a personal free API Key from Twelve Data which might be requested from this link https://twelvedata.com/apikey. After obtaining the key, you need to either:
+The preferred way to include the Twelve Data API key in the request payload is to assign it to an ENVIRONMENT variable which your Ruby application can fetch if none was explicitly assigned. The default ENVIRONMENTt variable name is `TWELVEDATA_API_KEY` but you can configure this to any other value  using the `#apikey_env_var_name=` setter method.
 
-1. Assign it to an ENV variable called `TWELVEDATA_API_KEY`. This is the preferred so your key won't be exposed. Or,
-2. You can pass along the API key during client requests. By default, the api key that is passed along will be the one to use and will just fallback to the ENV variable name `TWELVEDATA_API_KEY`.
+To get hold of the singleton `TwelvedataRuby::Client.instance`, you can directly used that inherited instance method from the mixed in `Singleton` module or thru the gem's module helper class method:
 
-TwelvedataRuby offers several entry points to access any endpoint of the API.
-
-```
+```ruby
 require "twelvedata_ruby"
-
-client = TwelvedataRuby::Client.new
-
-request = client.price(symbol: "IBM")
-
-response = request.fetch
-
-```
-or fetch it directly from the client instance
-
-```
-response = client.price(symbol: "IBM").fetch
+client = TwelvedataRuby.client
 ```
 
-or, you can actually just chain them all and do it in one line
+By not passing anything to the options method parameters, the `client` instance attributes will have default values. Though you can still set different values to the attributes through their helper setter methods:
 
-```
-response = TwelvedataRuby::Client.new.price(symbol: "IBM").fetch
-
-```
-
-As you may have noticed, the Twelve Data API endpoint `price` behaves like an instance method and its required and optional parameters behave like its method arguments. This is true to the rest of the endpoints. Treat it like an instance method with method arg keys that are the same with the API documentation.
-
-```
-resp1 = client.time_series(symbol: 'IBM', interval: '1day')
-resp2 = client.time_series(symbol: 'IBM,AAPL', interval: '1hour', format: :csv, filename: 'ibm-apple-time-series.csv')
-resp3 = client.quote(symbol: "USD/JPY")
-
-...
+```ruby
+client.apikey = "twelvedata-apikey"
+client.apikey_env_var_name = "the_environment_variable_name" # the helper getter method will upcase the value
+client.connect_timeout = 300 # can also accept "300"
 ```
 
-You can also access the endpoint via a `Request` instance
+or simply set them all at once:
 
-```
-response = TwelvedataRuby::Request.new(endpoint_name: :quote, params: {symbol: "GOOG"}).fetch
-```
-
-or, instantiates several request objects first, then send them all simultaneously. The library will fire up the multiple requests in parallel.
-
-```
-req1 = TwelvedataRuby::Request.new(endpoint_name: :quote, params: {symbol: "MSFT,USD/JPY,BTC/USD"})
-req2 = TwelvedataRuby::Request.new(endpoint_name: :eod, params: {symbol: "GOOG"})
-req3 = TwelvedataRuby::Request.new(endpoint_name: :time_series, params: {symbol: "F", interval: "1hour"})
-
-responses = TwelvedataRuby::Client.request([req1, req2, req3])
-
+```ruby
+require "twelvedata_ruby"
+client = TwelvedataRuby.client(apikey: "twelvedata-apikey", connect_timeout: 300)
+# or client = TwelvedataRuby.client(apikey_env_var_name: "the_environment_variable_name", connect_timeout: 300)
 ```
 
-Just be careful as you might hit your daily limit in one go if you're just using a free api key.
+The default values though are sufficient already.
+
+Getting any type of financial data then from the API, simply invoke any valid endpoint name to the client instance. For example, to fetch some data for `GOOG` stock symbol using quote, timeseries, price, and etd API endpoints:
+
+```ruby
+# 1. response content-type will be :csv
+client.quote(symbol: "GOOG", format: :csv)
+# 2. assigns custom attachment name
+client.timeseries(symbol: "GOOG", interval: "1hour", format: :csv, filename: "google_timeseries_1hour.csv")
+# 3. the content-type format will be :json
+client.price(symbol: "GOOG")
+# 4. the passed apikey is the used in the request payload
+client.etd(symbol: "GOOG", apikey: "overrides-whatever-is-the-current-apikey")
+# 5. an example of invocation which the API will respond with 401 error code
+client.etd(symbol: "GOOG", apikey: "invalid-api-key")
+# 6. still exactly the same object with client
+TwelvedataRuby.client.api_usage
+# 7. an invalid request wherein the required query parameter :interval is missing
+TwelvedataRuby.client.timeseries(symbol: "GOOG")
+# 8. an invalid request because it contains an invalid parameter
+client.price(symbol: "GOOG", invalid_parameter: "value")
+# 9. invoking a non-existing API endpoint will cause a NoMethodError exception
+client.price(symbol: "GOOG", invalid_parameter: "value")
+```
+
+All of the invocations possible return instance value is one of the following:
+- `TwelvedataRuby::Response` instance object which `#error` instance getter method can return a nil or kind of `TwelvedataRuby::ResponseError` instance if the API, or the API web server responded with some errors. #5 is an example which the API response will have status error with 401 code. `TwelvedataRuby::Response` resolves this into `TwelvedataRuby::UnauthorizedResponseError` instance.
+- `TwelvedataRuby::ResponseError` instance object itself when some error occurred that's not coming from the API
+- a Hash instance which has an `:errors` key that contains instances of kind `TwelvedataRuby::EndpointError`. This is an invalid request scenario which the #7, #8, and #9 examples. No actual API request was sent in this scenario.
+
+On first invocation of a valid endpoint name, a `TwelvedataRuby::Client` instance method of the same name is dynamically defined. So in effect, ideally, there can be a one-to-one mapping of all the API endpoints with their respective parameters constraints. Please visit their excellent API documentation to know more of the endpoint details here https://twelvedata.com/doc. Or if you're in a hurry, you can list the endpoints definitions:
+
+```ruby
+TwelvedataRuby::Endpoint.definitions
+```
+
+Another way of fetching data from API endpoints is by building a valid `TwelvedataRuby::Request` instance, then invoke `#fetch` on this instance. The possible return values are the same with the above examples.
+
+```ruby
+quote_req = TwelvedataRuby::Request.new(:quote, symbol: "IBM")
+quote_resp = quote_req.fetch
+timeseries_req = TwelvedataRuby::Request.new(:quote, symbol: "IBM", interval: "1hour", format: :csv)
+timeseries_resp = timeseries_req.fetch
+etd_req = TwelvedataRuby::Request.new(:etd, symbol: "GOOG")
+etd_resp = etd_req.fetch
+# or just simply chain
+price_resp = TwelvedataRuby::Request.new(:price, symbol: "GOOG").fetch
+```
+
+An advantage of building a valid request instance first then invoke the `#fetch` on it is you actually have an option to not send the request one by one BUT rather send them to the API server all at once simultaneously (might be in parallel). Like so taking the above examples' request instance objects, send them all simultaneously
+
+```ruby
+# returns a 3 element array of Response objects
+resp_objects_array = TwelvedataRuby::Client.request(quote_req, timeseries_req, etd_req)
+```
+
+Be caution that the above example, depending on the number request objects sent and how large the responses, hitting the daily limit is likely possible. But then again if you have several api keys you might be able to supply each request object with its own apikey. :)
 
 
-TODO: still a lot of features to document and write more rspec examples.
+TODO: write more documenation especially the response object
 
 ## Contributing
 
