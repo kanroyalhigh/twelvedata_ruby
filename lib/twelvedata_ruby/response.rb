@@ -100,6 +100,7 @@ module TwelvedataRuby
           tmp_file.close
           @parsed_body = send(body_parser, IO.read(tmp_file.path))
         ensure
+          body.close
           tmp_file.close
           tmp_file.unlink
         end
