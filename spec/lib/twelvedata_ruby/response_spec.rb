@@ -18,6 +18,10 @@ describe TwelvedataRuby::Response do
       expect(described_class::CSV_COL_SEP).to eq(";")
     end
 
+    it "BODY_MAX_BYTESIZE is equal to 16_000" do
+      expect(described_class::BODY_MAX_BYTESIZE).to eq(16_000)
+    end
+
     it "HTTP_STATUSES" do
       expect(described_class::HTTP_STATUSES).to be_an_instance_of(Hash)
       expect(described_class::HTTP_STATUSES).to be_frozen
@@ -41,6 +45,7 @@ describe TwelvedataRuby::Response do
   context "mock http request" do
     before(:each) do |example|
       endpoint_options[:query_params].merge!(example.metadata[:query_params]) if example.metadata[:query_params]
+      endpoint_options.merge!(example.metadata[:endpoint_options]) if example.metadata[:endpoint_options]
       stub_http_opts = example.metadata[:stub_http_opts] || {}
       expect(request).to be_valid
       stub_http_fetch(request, **(stub_http_opts[:opts] || {}))
@@ -136,6 +141,11 @@ describe TwelvedataRuby::Response do
           expect(subject.content_type).to eq(:csv)
           expect(subject.body_parser).to eq(:csv_parser)
           expect(subject.parsed_body_dumper).to eq(:csv_dumper)
+        end
+
+        it "can parse long response body", endpoint_options: {name: :cryptocurrencies, query_params: {format: :csv}} do
+          expect(subject.body.bytesize).to be > described_class::BODY_MAX_BYTESIZE
+          expect(subject.parsed_body).to be_an_instance_of(CSV::Table)
         end
 
         it "#parsed_body returns a `CSV::Table` instance" do

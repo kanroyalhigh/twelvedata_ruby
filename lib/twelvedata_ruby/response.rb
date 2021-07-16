@@ -4,6 +4,7 @@ require "csv"
 module TwelvedataRuby
   class Response
     CSV_COL_SEP = ";"
+    BODY_MAX_BYTESIZE = 16_000
     HTTP_STATUSES = {http_error: (400..600), success: (200..299)}.freeze
     CONTENT_TYPE_HANDLERS = {
       json: {parser: :json_parser, dumper: :json_dumper},
@@ -56,17 +57,12 @@ module TwelvedataRuby
       @content_type ||= headers["content-type"].match(%r{^.+/([a-z]+).*$})&.send(:[], 1)&.to_sym
     end
 
-    def csv_parser
-      chunk_parsed = nil
-      opts = {col_sep: CSV_COL_SEP}
-      body.each do |chk|
-        chunk_parsed = chunk_parsed&.send(:push, CSV.parse(chk, **opts)) || CSV.parse(chk, **opts.merge(headers: true))
-      end
-      chunk_parsed
+    def csv_parser(io_str=nil)
+      CSV.parse(io_str || body.to_s, headers: true, col_sep: CSV_COL_SEP)
     end
 
     def csv_dumper
-      parsed_body.is_a?(CSV::Table) ? parsed_body.to_csv : nil
+      parsed_body.is_a?(CSV::Table) ? parsed_body.to_csv(col_sep: CSV_COL_SEP) : nil
     end
 
     def dumped_parsed_body
@@ -89,12 +85,26 @@ module TwelvedataRuby
       parsed_body.is_a?(Hash) ? JSON.dump(parsed_body) : nil
     end
 
-    def json_parser
-      JSON.parse(body, symbolize_names: true)
+    def json_parser(io_obj=nil)
+      JSON.parse(io_obj || body.to_s, symbolize_names: true)
     end
 
     def parsed_body
-      @parsed_body ||= send(body_parser)
+      return @parsed_body if @parsed_body
+      if body.bytesize < BODY_MAX_BYTESIZE
+        @parsed_body = send(body_parser)
+      else
+        tmp_file = Tempfile.new
+        begin
+          body.copy_to(tmp_file)
+          tmp_file.close
+          @parsed_body = send(body_parser, IO.read(tmp_file.path))
+        ensure
+          tmp_file.close
+          tmp_file.unlink
+        end
+      end
+      @parsed_body
     end
 
     def parsed_body_dumper

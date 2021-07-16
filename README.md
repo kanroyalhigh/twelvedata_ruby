@@ -1,5 +1,6 @@
 # TwelvedataRuby
 
+[![Gem Version](https://badge.fury.io/rb/twelvedata_ruby.svg)](https://badge.fury.io/rb/twelvedata_ruby)
 
 TwelvedataRuby is a Ruby library that exposes some convenient ways to access Twelve Data API to get information on stock, forex, crypto, and other financial market data. In order to do so, a free API key is required which can be easily requested [here](https://twelvedata.com/pricing). Visit their [API's full documentation](https://twelvedata.com/doc)
 
