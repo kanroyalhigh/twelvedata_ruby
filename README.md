@@ -105,8 +105,34 @@ resp_objects_array = TwelvedataRuby::Client.request(quote_req, timeseries_req, e
 Be caution that the above example, depending on the number request objects sent and how large the responses, hitting the daily limit is likely possible. But then again if you have several api keys you might be able to supply each request object with its own apikey. :)
 
 
-TODO: write more documenation especially the response object
+The data from a successful API request can be access from `Response#parsed_body`. If request format is `:json` then it will be a `Hash` instance
 
+```ruby
+TwelvedataRuby.client.quote(symbol: "GOOG").parsed_body
+=>
+{:symbol=>"GOOG",
+ :name=>"Alphabet Inc",
+ :exchange=>"NASDAQ",
+ :currency=>"USD",
+ :datetime=>"2021-07-15",
+ :open=>"2650.00000",
+ :high=>"2651.89990",
+ :low=>"2611.95996",
+ :close=>"2625.33008",
+ :volume=>"828300",
+ :previous_close=>"2641.64990",
+ :change=>"-16.31982",
+ :percent_change=>"-0.61779",
+ :average_volume=>"850344",
+ :fifty_two_week=>{:low=>"1406.55005", :high=>"2659.91992", :low_change=>"1218.78003", :high_change=>"-34.58984", :low_change_percent=>"86.65031", :high_change_percent=>"-1.30041", :range=>"1406.550049 - 2659.919922"}}
+```
+
+Likewise, if the API request format is `:csv` then `Response#parsed_body` will be `CSV#Table` instance
+
+```ruby
+TwelvedataRuby.client.quote(symbol: "GOOG", format: :csv).parsed_body
+=> #<CSV::Table mode:col_or_row row_count:2>
+```
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/twelvedata_ruby. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/twelvedata_ruby/blob/master/CODE_OF_CONDUCT.md).
