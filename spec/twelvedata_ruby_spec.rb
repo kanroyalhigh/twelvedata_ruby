@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 describe TwelvedataRuby do
-  it "has 0.2.0 version number" do
-    expect(described_class::VERSION).to eq("0.2.0")
+  it "has 0.2.1 version number" do
+    expect(described_class::VERSION).to eq("0.2.1")
   end
 
   describe ".client" do
