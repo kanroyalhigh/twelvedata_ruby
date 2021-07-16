@@ -2,7 +2,7 @@
 
 describe TwelvedataRuby do
   it "has 0.1.0 version number" do
-    expect(described_class::VERSION).to eq("0.1.0")
+    expect(described_class::VERSION).to eq("0.1.1")
   end
 
   describe ".client" do

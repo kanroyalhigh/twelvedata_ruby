@@ -164,9 +164,35 @@ resp_objects_array = TwelvedataRuby::Client.request(quote_req, timeseries_req, e
 
 <p>Be caution that the above example, depending on the number request objects sent and how large the responses, hitting the daily limit is likely possible. But then again if you have several api keys you might be able to supply each request object with its own apikey. :)</p>
 
-<p>TODO: write more documenation especially the response object</p>
+<p>The data from a successful API request can be access from <code>Response#parsed_body</code>. If request format is <code>:json</code> then it will be a <code>Hash</code> instance</p>
 
-<h2 id="contributing">Contributing</h2>
+<p><code>ruby
+TwelvedataRuby.client.quote(symbol: "GOOG").parsed_body
+=&gt;
+{:symbol=&gt;"GOOG",
+ :name=&gt;"Alphabet Inc",
+ :exchange=&gt;"NASDAQ",
+ :currency=&gt;"USD",
+ :datetime=&gt;"2021-07-15",
+ :open=&gt;"2650.00000",
+ :high=&gt;"2651.89990",
+ :low=&gt;"2611.95996",
+ :close=&gt;"2625.33008",
+ :volume=&gt;"828300",
+ :previous_close=&gt;"2641.64990",
+ :change=&gt;"-16.31982",
+ :percent_change=&gt;"-0.61779",
+ :average_volume=&gt;"850344",
+ :fifty_two_week=&gt;{:low=&gt;"1406.55005", :high=&gt;"2659.91992", :low_change=&gt;"1218.78003", :high_change=&gt;"-34.58984", :low_change_percent=&gt;"86.65031", :high_change_percent=&gt;"-1.30041", :range=&gt;"1406.550049 - 2659.919922"}}
+</code></p>
+
+<p>Likewise, if the API request format is <code>:csv</code> then <code>Response#parsed_body</code> will be <code>CSV#Table</code> instance</p>
+
+<p><code>ruby
+TwelvedataRuby.client.quote(symbol: "GOOG", format: :csv).parsed_body
+=&gt; #&lt;CSV::Table mode:col_or_row row_count:2&gt;
+</code>
+## Contributing</p>
 
 <p>Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/twelvedata_ruby. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the <a href="https://github.com/[USERNAME]/twelvedata_ruby/blob/master/CODE_OF_CONDUCT.md">code of conduct</a>.</p>
 
@@ -184,7 +210,7 @@ resp_objects_array = TwelvedataRuby::Client.request(quote_req, timeseries_req, e
 </div></div>
 
       <div id="footer">
-  Generated on Tue Jul 13 08:56:46 2021 by
+  Generated on Fri Jul 16 20:28:33 2021 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.26 (ruby-3.0.1).
 </div>
