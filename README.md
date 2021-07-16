@@ -133,6 +133,9 @@ Likewise, if the API request format is `:csv` then `Response#parsed_body` will b
 TwelvedataRuby.client.quote(symbol: "GOOG", format: :csv).parsed_body
 => #<CSV::Table mode:col_or_row row_count:2>
 ```
+
+## Documentation
+You can browse the source code [documentation](https://kanroyalhigh.github.io/twelvedata_ruby/doc/)
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/twelvedata_ruby. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/twelvedata_ruby/blob/master/CODE_OF_CONDUCT.md).
