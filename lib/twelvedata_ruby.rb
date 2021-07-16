@@ -12,7 +12,7 @@ require_relative "twelvedata_ruby/client"
 module TwelvedataRuby
   # Holds the current version
   # @return [String] version number
-  VERSION = "0.1.1"
+  VERSION = "0.2.0"
 
   # A convenient and clearer way of getting and overriding default attribute values of the singleton `Client.instance`
   #

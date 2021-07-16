@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    twelvedata_ruby (0.1.1)
+    twelvedata_ruby (0.2.0)
       httpx (~> 0.14.5)
 
 GEM
