@@ -57,7 +57,21 @@ module TwelvedataRuby
       },
       time_series: {
         parameters: {
-          keys: %i[symbol interval exchange country type outputsize format],
+          keys: %i[
+            symbol
+            interval
+            exchange
+            country
+            type
+            outputsize
+            format
+            dp
+            order
+            timezone
+            start_date
+            end_date
+            previous_close
+          ],
           required: %i[symbol interval]
         },
         response: {
@@ -96,15 +110,15 @@ module TwelvedataRuby
         response: {keys: %i[price]}
       },
       eod: {
-        parameters: {keys: %i[symbol exchange country type], required: %i[symbol]},
+        parameters: {keys: %i[symbol exchange country type prepost dp], required: %i[symbol]},
         response: {keys: %i[symbol exchange currency datetime close]}
       },
       exchange_rate: {
-        parameters: {keys: %i[symbol format], required: %i[symbol]},
+        parameters: {keys: %i[symbol format precision timezone], required: %i[symbol]},
         response: {keys: %i[symbol rate timestamp]}
       },
       currency_conversion: {
-        parameters: {keys: %i[symbol amount format], required: %i[symbol amount]},
+        parameters: {keys: %i[symbol amount format precision timezone], required: %i[symbol amount]},
         response: {keys: %i[symbol rate amount timestamp]}
       },
       complex_data: {
