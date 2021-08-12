@@ -16,7 +16,7 @@ module TwelvedataRuby
 
   # A convenient and clearer way of getting and overriding default attribute values of the singleton `Client.instance`
   #
-  # @param [Hash] options the optional Hash object that may contain values to override the defaults
+  # @param [Hash] options the optional Hash object that may contain values to override the cd Docdefaults
   # @option options [Symbol, String] :apikey the private key from Twelvedata API key
   # @option options [Integer, String] :connect_timeout milliseconds
   #

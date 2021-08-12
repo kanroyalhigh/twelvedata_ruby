@@ -35,12 +35,10 @@ module TwelvedataRuby
       end
     end
 
-    attr_reader :http_response, :headers, :body, :request
+    attr_reader :http_response, :headers, :body, :body_bytesize, :request
 
     def initialize(http_response:, request:, headers: nil, body: nil)
       self.http_response = http_response
-      self.headers = headers || http_response.headers
-      self.body = body || http_response.body
     end
 
     def attachment_filename
@@ -57,8 +55,8 @@ module TwelvedataRuby
       @content_type ||= headers["content-type"].match(%r{^.+/([a-z]+).*$})&.send(:[], 1)&.to_sym
     end
 
-    def csv_parser(io_str=nil)
-      CSV.parse(io_str || body.to_s, headers: true, col_sep: CSV_COL_SEP)
+    def csv_parser(io)
+      CSV.parse(io, headers: true, col_sep: CSV_COL_SEP)
     end
 
     def csv_dumper
@@ -85,35 +83,39 @@ module TwelvedataRuby
       parsed_body.is_a?(Hash) ? JSON.dump(parsed_body) : nil
     end
 
-    def json_parser(io_obj=nil)
-      JSON.parse(io_obj || body.to_s, symbolize_names: true)
+    def json_parser(io)
+      JSON.parse(io, symbolize_names: true)
     end
 
     def parsed_body
-      return @parsed_body if @parsed_body
-      if body.bytesize < BODY_MAX_BYTESIZE
-        @parsed_body = send(body_parser)
-      else
-        tmp_file = Tempfile.new
-        begin
-          body.copy_to(tmp_file)
-          tmp_file.close
+      return @parsed_body if @parsed_body || http_response&.body.nil? || http_response&.body.closed?
+
+      begin
+        tmp_file = nil
+        if body_bytesize < BODY_MAX_BYTESIZE
+          @parsed_body = send(body_parser, http_response.body.to_s)
+        else
+          tmp_file = Tempfile.new
+          http_response.body.copy_to(tmp_file)
           @parsed_body = send(body_parser, IO.read(tmp_file.path))
-        ensure
-          body.close
-          tmp_file.close
-          tmp_file.unlink
         end
+      ensure
+        http_response.body.close
+        tmp_file&.close
+        tmp_file&.unlink
       end
+
       @parsed_body
     end
+    alias body parsed_body
+    alias parse_http_response_body parsed_body
 
     def parsed_body_dumper
       CONTENT_TYPE_HANDLERS[content_type][:dumper]
     end
 
-    def plain_parser
-      body.to_s
+    def plain_parser(io=nil)
+      io.to_s || http_response.body.to_s
     end
 
     def status_code
@@ -138,6 +140,17 @@ module TwelvedataRuby
 
     private
 
-    attr_writer :http_response, :headers, :body, :request
+    attr_writer :request
+
+    def http_response=(http_resp)
+      @http_response = http_resp
+      @body_bytesize = http_resp.body.bytesize
+      self.headers = http_response.headers
+      parse_http_response_body
+    end
+
+    def headers=(http_resp_headers)
+      @headers = http_response&.headers
+    end
   end
 end

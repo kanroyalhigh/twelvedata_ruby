@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "httpx", "~> 0.14", ">= 0.14.5"
   spec.add_development_dependency "rake", "~> 13.0", ">= 13.0.0"
   spec.add_development_dependency "rspec", "~> 3.10", ">= 3.10.0"
-  spec.add_development_dependency "rubocop", "~> 1.17",  ">= 1.17.0"
+  spec.add_development_dependency "rubocop", "~> 1.17", ">= 1.17.0"
   spec.add_development_dependency "simplecov", "~> 0.21", ">= 0.21.2"
   spec.add_development_dependency "webmock", "~> 3.13", ">= 3.13.0"
 end

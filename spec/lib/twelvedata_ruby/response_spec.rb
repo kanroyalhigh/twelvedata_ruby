@@ -144,7 +144,7 @@ describe TwelvedataRuby::Response do
         end
 
         it "can parse long response body", endpoint_options: {name: :cryptocurrencies, query_params: {format: :csv}} do
-          expect(subject.body.bytesize).to be > described_class::BODY_MAX_BYTESIZE
+          expect(subject.body_bytesize).to be > described_class::BODY_MAX_BYTESIZE
           expect(subject.parsed_body).to be_an_instance_of(CSV::Table)
         end
 

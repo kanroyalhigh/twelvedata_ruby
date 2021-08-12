@@ -6,9 +6,9 @@ module TwelvedataRuby
       "EndpointError" => "Endpoint is not valid. %{invalid}",
       "EndpointNameError" => "`%{invalid}` is not a correct endpoint. Valid values are: `%{valid_names}`",
       "EndpointParametersKeysError" => "Invalid parameters found: `%{invalid}`. Valid parameters for `%{name}` "\
-        "endpoint are: `%{parameters}`. Please see: `Twelvedata::Endpoint#parameters` for more details",
+                                       "endpoint are: `%{parameters}`. Please see: `Twelvedata::Endpoint#parameters` for more details",
       "EndpointRequiredParametersError" => "Missing values for required parameters: `%{invalid}`. "\
-        "`%{name}` endpoint required parameters are: `%{required}`.",
+                                           "`%{name}` endpoint required parameters are: `%{required}`.",
       "ResponseError" => "Encountered an error from the response"
     }.freeze
 
